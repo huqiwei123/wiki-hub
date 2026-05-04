@@ -7,14 +7,14 @@ export default function BlogPage() {
     <div className="w-full pb-16">
       <PageHero title="Articles" subtitle="Browse technical notes, tutorials, and connected essays" />
       <Container>
-      <div className="mt-8 flex h-11 items-center gap-2 rounded-lg border border-border bg-white px-3">
-        <span className="text-xs text-slate-500">Filter by:</span>
+      <div className="mt-8 flex h-11 items-center gap-2 rounded-lg border border-border bg-card px-3">
+        <span className="text-xs text-muted-foreground">Filter by:</span>
         <FilterButton active>All</FilterButton>
         <FilterButton>Development</FilterButton>
         <FilterButton>Infrastructure</FilterButton>
         <FilterButton>Frontend</FilterButton>
         <FilterButton>AI &amp; ML</FilterButton>
-        <span className="ml-auto text-xs text-slate-500">Sort by: Latest</span>
+        <span className="ml-auto text-xs text-muted-foreground">Sort by: Latest</span>
       </div>
       <div className="mt-8">
         <SectionHeader title="Latest Articles" subtitle="Static demo data for the Pencil UI pass" />

@@ -52,7 +52,7 @@ export default async function PostPage({ params }: Props) {
             )}
           </div>
         </div>
-        <div className="relative flex flex-wrap items-center gap-4 border-t border-white/35 bg-background/30 px-6 py-4 text-sm text-muted-foreground backdrop-blur-xl dark:border-white/10 sm:px-8 lg:px-10">
+        <div className="relative flex flex-wrap items-center gap-4 border-t border-border/50 bg-background/30 px-6 py-4 text-sm text-muted-foreground backdrop-blur-xl sm:px-8 lg:px-10">
           {post.profiles?.display_name && (
             <span className="inline-flex items-center gap-2">
               <UserRound className="size-4" />

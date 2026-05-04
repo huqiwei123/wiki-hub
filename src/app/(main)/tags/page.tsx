@@ -16,22 +16,22 @@ export default function TagsPage() {
         <StatCard icon={<ArrowUpRight className="size-4 text-red-600" />} label="Popular Tag" value="TypeScript" />
       </div>
 
-      <div className="mt-6 flex h-11 items-center gap-2 rounded-lg border border-border bg-white px-3">
-        <SlidersHorizontal className="size-4 text-slate-500" />
-        <span className="text-xs text-slate-500">Sort by:</span>
+      <div className="mt-6 flex h-11 items-center gap-2 rounded-lg border border-border bg-card px-3">
+        <SlidersHorizontal className="size-4 text-muted-foreground" />
+        <span className="text-xs text-muted-foreground">Sort by:</span>
         <FilterButton active>Most Popular</FilterButton>
         <FilterButton>A-Z</FilterButton>
         <FilterButton>Z-A</FilterButton>
         <FilterButton>Newest</FilterButton>
-        <div className="ml-auto hidden h-8 items-center gap-2 rounded-lg bg-muted px-3 text-xs text-slate-500 sm:flex">
+        <div className="ml-auto hidden h-8 items-center gap-2 rounded-lg bg-muted px-3 text-xs text-muted-foreground sm:flex">
           <Search className="size-4" />
           Search tags...
         </div>
       </div>
 
       <section className="mt-7">
-        <h2 className="text-sm font-bold text-slate-950">Popular Tags</h2>
-        <div className="mt-4 rounded-xl border border-border bg-white p-7">
+        <h2 className="text-sm font-bold text-foreground">Popular Tags</h2>
+        <div className="mt-4 rounded-xl border border-border bg-card p-7">
           <div className="flex flex-wrap gap-3">
             {tags.map(([name, count, color, bg], index) => (
               <span
@@ -50,15 +50,15 @@ export default function TagsPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-bold text-slate-950">All Tags</h2>
+        <h2 className="text-sm font-bold text-foreground">All Tags</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           {tags.slice(0, 12).map(([name, count, color]) => (
-            <div key={name} className="flex h-16 items-center justify-between rounded-lg border border-border bg-white px-5 shadow-sm">
+            <div key={name} className="flex h-16 items-center justify-between rounded-lg border border-border bg-card px-5 shadow-sm">
               <div className="flex items-center gap-3">
                 <span className="size-3 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-sm font-medium text-slate-950">{name}</span>
+                <span className="text-sm font-medium text-foreground">{name}</span>
               </div>
-              <span className="text-xs text-slate-400">{count} articles</span>
+              <span className="text-xs text-muted-foreground">{count} articles</span>
             </div>
           ))}
         </div>
@@ -66,7 +66,7 @@ export default function TagsPage() {
 
       <div className="mt-10 flex justify-center gap-2">
         {["‹", "1", "2", "3", "›"].map((item) => (
-          <button key={item} className={`grid size-9 place-items-center rounded-lg text-xs font-medium ${item === "1" ? "bg-blue-600 text-white" : "bg-muted text-slate-600"}`}>
+          <button key={item} className={`grid size-9 place-items-center rounded-lg text-xs font-medium ${item === "1" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
             {item}
           </button>
         ))}
@@ -78,9 +78,9 @@ export default function TagsPage() {
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="h-[100px] rounded-xl border border-border bg-white p-5 shadow-sm">
-      <div className="flex items-center gap-2 text-xs text-slate-500">{icon}{label}</div>
-      <div className="mt-3 text-3xl font-extrabold text-slate-950">{value}</div>
+    <div className="h-[100px] rounded-xl border border-border bg-card p-5 shadow-sm">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">{icon}{label}</div>
+      <div className="mt-3 text-3xl font-extrabold text-foreground">{value}</div>
     </div>
   );
 }

@@ -125,10 +125,6 @@
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
-    background: #f8fafc;
-  }
-  .dark body {
-    background: #07111f;
   }
   html {
     @apply font-sans;
@@ -138,7 +134,7 @@
 
 @layer utilities {
   .glass-panel {
-    @apply border border-border bg-white/90 shadow-sm backdrop-blur-xl;
+    @apply border border-border bg-card/90 shadow-sm backdrop-blur-xl;
   }
 
   .surface-line {

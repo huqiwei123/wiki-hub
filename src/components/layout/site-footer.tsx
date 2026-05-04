@@ -4,21 +4,21 @@ import { Container } from "@/components/layout/container";
 
 export function SiteFooter() {
   return (
-    <footer className="w-full bg-[#111318] py-12 text-white">
+    <footer className="w-full border-t border-border bg-card py-12 text-foreground">
       <Container className="grid gap-12 lg:grid-cols-[320px_1fr]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="grid size-5 place-items-center rounded-[5px] border border-blue-400 text-blue-400">
+            <span className="grid size-5 place-items-center rounded-[5px] border border-accent text-accent">
               <BookOpenText className="size-3.5" />
             </span>
             <span className="text-sm font-bold">WikiHub</span>
           </div>
-          <p className="mt-4 max-w-xs text-xs leading-6 text-slate-400">
+          <p className="mt-4 max-w-xs text-xs leading-6 text-muted-foreground">
             A personal knowledge base and blogging platform designed for connected thinking and deep technical writing.
           </p>
           <div className="mt-5 flex gap-2">
             {["GH", "X", "in"].map((label) => (
-              <Link key={label} href="#" className="grid size-9 place-items-center rounded-lg bg-[#1f232b] text-[11px] font-bold text-slate-300">
+              <Link key={label} href="#" className="grid size-9 place-items-center rounded-lg bg-muted text-[11px] font-bold text-muted-foreground">
                 {label}
               </Link>
             ))}
@@ -29,17 +29,17 @@ export function SiteFooter() {
           <FooterColumn title="Resources" links={["About", "Newsletter", "RSS Feed", "Privacy Policy"]} />
           <div>
             <h3 className="text-sm font-semibold">Stay updated</h3>
-            <p className="mt-3 text-xs leading-6 text-slate-400">
+            <p className="mt-3 text-xs leading-6 text-muted-foreground">
               Subscribe to the newsletter to get new articles and knowledge graph updates.
             </p>
-            <div className="mt-4 flex h-10 overflow-hidden rounded-lg bg-[#1f232b] p-1">
-              <input className="min-w-0 flex-1 bg-transparent px-3 text-xs outline-none placeholder:text-slate-500" placeholder="Email address" />
-              <button className="rounded-md bg-blue-600 px-4 text-xs font-medium">Subscribe</button>
+            <div className="mt-4 flex h-10 overflow-hidden rounded-lg bg-muted p-1">
+              <input className="min-w-0 flex-1 bg-transparent px-3 text-xs outline-none placeholder:text-muted-foreground" placeholder="Email address" />
+              <button className="rounded-md bg-primary px-4 text-xs font-medium text-primary-foreground">Subscribe</button>
             </div>
           </div>
         </div>
       </Container>
-      <Container className="mt-12 flex border-t border-white/10 pt-6 text-xs text-slate-500">
+      <Container className="mt-12 flex border-t border-border pt-6 text-xs text-muted-foreground">
         <span>© 2026 WikiHub. All rights reserved.</span>
         <span className="ml-auto">Made with ❤️</span>
       </Container>
@@ -51,7 +51,7 @@ function FooterColumn({ title, links }: { title: string; links: string[] }) {
   return (
     <div>
       <h3 className="text-sm font-semibold">{title}</h3>
-      <div className="mt-4 grid gap-3 text-xs text-slate-400">
+      <div className="mt-4 grid gap-3 text-xs text-muted-foreground">
         {links.map((link) => (
           <Link key={link} href="#">
             {link}

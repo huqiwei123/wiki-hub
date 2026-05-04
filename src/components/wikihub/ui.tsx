@@ -6,10 +6,10 @@ import { Container } from "@/components/layout/container";
 
 export function PageHero({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <section className="w-full border-b border-border bg-[#eff6ff]/75 py-12 text-center backdrop-blur-xl dark:bg-[#0b1728]/80">
+    <section className="w-full border-b border-border bg-muted/75 py-12 text-center backdrop-blur-xl">
       <Container>
         <h1 className="text-4xl font-extrabold tracking-tight text-foreground md:text-5xl">{title}</h1>
-        <p className="mx-auto mt-4 max-w-2xl text-sm text-slate-600">{subtitle}</p>
+        <p className="mx-auto mt-4 max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
       </Container>
     </section>
   );
@@ -20,7 +20,7 @@ export function SectionHeader({ title, subtitle, action }: { title: string; subt
     <div className="flex items-end justify-between gap-4">
       <div>
         <h2 className="text-xl font-extrabold tracking-tight text-foreground">{title}</h2>
-        {subtitle && <p className="mt-1 text-xs text-slate-500">{subtitle}</p>}
+        {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -46,10 +46,10 @@ export function ArticleCard({ article = articles[0] }: { article?: (typeof artic
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/10 to-white/0" />
       </div>
       <div className="p-5">
-        <span className="inline-flex h-6 items-center rounded-md bg-[#dbeafe] px-2 text-[11px] font-medium text-blue-700">{article.category}</span>
+        <span className="inline-flex h-6 items-center rounded-md bg-accent/15 px-2 text-[11px] font-medium text-accent">{article.category}</span>
         <h3 className="mt-3 line-clamp-2 text-base font-bold leading-snug text-foreground">{article.title}</h3>
-        <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">{article.excerpt}</p>
-        <div className="mt-5 flex items-center justify-between text-[11px] text-slate-400">
+        <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{article.excerpt}</p>
+        <div className="mt-5 flex items-center justify-between text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Calendar className="size-3" />
             {article.date}
@@ -68,7 +68,7 @@ export function CompactCategoryCard({ item = categories[0] }: { item?: (typeof c
         <span className="grid size-11 place-items-center rounded-lg" style={{ backgroundColor: item.bg, color: item.color }}>
           <Code2 className="size-5" />
         </span>
-        <ArrowRight className="size-4 text-slate-400" />
+        <ArrowRight className="size-4 text-muted-foreground" />
       </div>
       <h3 className="mt-5 font-bold text-foreground">{item.name}</h3>
       <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
@@ -81,7 +81,7 @@ export function CompactCategoryCard({ item = categories[0] }: { item?: (typeof c
 
 export function FilterButton({ active, children }: { active?: boolean; children: React.ReactNode }) {
   return (
-    <button className={`h-7 rounded-md px-3 text-xs font-medium ${active ? "bg-blue-600 text-white" : "bg-muted text-slate-700"}`}>
+    <button className={`h-7 rounded-md px-3 text-xs font-medium ${active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
       {children}
     </button>
   );
@@ -111,10 +111,10 @@ export function GraphPlaceholder({ className = "" }: { className?: string }) {
       ].map(([label, position, color]) => (
         <div key={label} className={`absolute ${position} rounded-2xl border border-border bg-card/80 px-5 py-4 text-center shadow-lg backdrop-blur-xl`}>
           <span className={`mx-auto block size-3 rounded-full ${color}`} />
-          <span className="mt-2 block text-xs font-semibold text-slate-700">{label}</span>
+          <span className="mt-2 block text-xs font-semibold text-foreground">{label}</span>
         </div>
       ))}
-      <div className="absolute inset-x-0 bottom-8 text-center text-slate-400">
+      <div className="absolute inset-x-0 bottom-8 text-center text-muted-foreground">
         <GitBranch className="mx-auto size-8 opacity-40" />
         <p className="mt-2 text-xs font-medium">Interactive knowledge graph preview</p>
       </div>
