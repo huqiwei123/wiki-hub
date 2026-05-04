@@ -7,7 +7,14 @@
       "Bash(node /tmp/append_plan.js)",
       "Bash(node /tmp/append_phase.js)",
       "Bash(node /tmp/append_appendix.js)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npm install *)",
+      "Bash(npx shadcn@latest add badge card input label textarea separator avatar dropdown-menu sheet dialog tabs skeleton scroll-area)",
+      "Bash(npm run *)",
+      "mcp__plugin_everything-claude-code_playwright__browser_navigate",
+      "Bash(npm ls *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)"
     ]
   }
 }
