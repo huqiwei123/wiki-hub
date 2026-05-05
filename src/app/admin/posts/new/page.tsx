@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { ImageUpload } from "@/components/admin/image-upload";
 
 export default async function NewPostPage() {
   const categories = await getAllCategories();
@@ -29,21 +30,19 @@ export default async function NewPostPage() {
           <Textarea id="content" name="content" rows={20} required placeholder="Write your post in Markdown..." className="font-mono text-sm" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="category_id">Category</Label>
-            <select id="category_id" name="category_id" className="w-full rounded-md border px-3 py-2 text-sm">
-              <option value="">None</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="cover_image">Cover Image</Label>
+          <ImageUpload name="cover_image" />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="cover_image">Cover Image URL</Label>
-            <Input id="cover_image" name="cover_image" type="url" placeholder="https://..." />
-          </div>
+        <div className="w-1/2 space-y-2">
+          <Label htmlFor="category_id">Category</Label>
+          <select id="category_id" name="category_id" className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground">
+            <option value="">None</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-2">

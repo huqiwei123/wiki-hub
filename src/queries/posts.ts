@@ -3,11 +3,25 @@ import { publicSupabase, withTimeoutSignal } from "@/lib/supabase/public";
 import type { Post } from "@/types";
 import { cache } from "react";
 
-function flattenPostTags(row: any): any {
+type PostTagJoin = { tag?: Post["tags"][number] | null } | Post["tags"][number];
+type PostQueryRow = Omit<Post, "tags"> & {
+  tags?: PostTagJoin[] | null;
+};
+
+function isPostTagJoin(value: PostTagJoin): value is { tag?: Post["tags"][number] | null } {
+  return typeof value === "object" && value !== null && "tag" in value;
+}
+
+function flattenPostTags(row: PostQueryRow): Post {
   if (row.tags && Array.isArray(row.tags)) {
-    return { ...row, tags: row.tags.map((t: any) => t.tag ?? t) };
+    return {
+      ...row,
+      tags: row.tags
+        .map((tagRow) => (isPostTagJoin(tagRow) ? tagRow.tag : tagRow))
+        .filter((tag): tag is Post["tags"][number] => Boolean(tag)),
+    };
   }
-  return row;
+  return { ...row, tags: [] };
 }
 
 export const getPublishedPosts = cache(
@@ -27,7 +41,7 @@ export const getPublishedPosts = cache(
 
       if (error) return { posts: [], total: 0, page, pageSize };
 
-      const posts = (data as any[]).map(flattenPostTags) as Post[];
+      const posts = (data as unknown as PostQueryRow[]).map(flattenPostTags);
 
       return {
         posts,
@@ -71,7 +85,7 @@ export async function getAllPosts(page = 1, pageSize = 20) {
 
     if (error) return { posts: [], total: 0, page, pageSize };
 
-    const posts = (data as any[]).map(flattenPostTags) as Post[];
+    const posts = (data as unknown as PostQueryRow[]).map(flattenPostTags);
 
     return {
       posts,
@@ -102,7 +116,7 @@ export const getPostsByTag = cache(
 
       if (error) return { posts: [], total: 0, page, pageSize };
 
-      const posts = (data as any[]).map(flattenPostTags) as Post[];
+      const posts = (data as unknown as PostQueryRow[]).map(flattenPostTags);
 
       return {
         posts,
@@ -136,7 +150,7 @@ export const getPostsByCategory = cache(
 
       if (error) return { posts: [], total: 0, page, pageSize };
 
-      const posts = (data as any[]).map(flattenPostTags) as Post[];
+      const posts = (data as unknown as PostQueryRow[]).map(flattenPostTags);
 
       return {
         posts,

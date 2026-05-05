@@ -1,5 +1,5 @@
 import type { Plugin } from "unified";
-import type { Root } from "mdast";
+import type { Link, Root, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
 // Matches [[slug]] and [[slug|display text]]
@@ -24,7 +24,7 @@ export const remarkWikiLinks: Plugin<[], Root> = () => {
       const matches = [...node.value.matchAll(WIKI_LINK_RE)];
       if (matches.length === 0) return;
 
-      const children: any[] = [];
+      const children: Array<Link | Text> = [];
       let lastIndex = 0;
 
       for (const match of matches) {

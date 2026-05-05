@@ -2,6 +2,10 @@ import { publicSupabase, withTimeoutSignal } from "@/lib/supabase/public";
 import { cache } from "react";
 import type { Comment } from "@/types";
 
+type CommentRow = Omit<Comment, "profiles" | "replies"> & {
+  profiles: Comment["profiles"] | null;
+};
+
 export const getComments = cache(async (postId: string) => {
   const timeout = withTimeoutSignal();
   try {
@@ -16,7 +20,7 @@ export const getComments = cache(async (postId: string) => {
 
     if (error || !data) return [];
 
-    return (data as any[]).map((c) => ({
+    return (data as unknown as CommentRow[]).map((c) => ({
       ...c,
       profiles: c.profiles ?? null,
     })) as Comment[];
@@ -40,7 +44,7 @@ export const getCommentReplies = cache(async (parentId: string) => {
 
     if (error || !data) return [];
 
-    return (data as any[]).map((c) => ({
+    return (data as unknown as CommentRow[]).map((c) => ({
       ...c,
       profiles: c.profiles ?? null,
     })) as Comment[];

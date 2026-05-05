@@ -34,6 +34,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/tags" className="block rounded-md px-3 py-2 hover:bg-muted">
             Tags
           </Link>
+          <Link href="/admin/subscribers" className="block rounded-md px-3 py-2 hover:bg-muted">
+            Subscribers
+          </Link>
         </nav>
         <div className="mt-8 border-t pt-4">
           <Link href="/" className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted">

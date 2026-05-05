@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ImageUpload } from "@/components/admin/image-upload";
 
-export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditPostPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
   const { id } = await params;
+  const { saved } = await searchParams;
   const supabase = await createClient();
 
   const { data: post } = await supabase
@@ -37,14 +39,19 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
             {post.published ? "Published" : "Draft"}
           </Badge>
         </div>
-        <form action={deletePostWithId}>
-          <button
-            type="submit"
-            className="rounded-md border border-destructive px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
-          >
-            Delete
-          </button>
-        </form>
+        <div className="flex items-center gap-3">
+          {saved === "1" && (
+            <span className="rounded-md bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700 dark:bg-green-950 dark:text-green-300">Saved</span>
+          )}
+          <form action={deletePostWithId}>
+            <button
+              type="submit"
+              className="rounded-md border border-destructive px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10"
+            >
+              Delete
+            </button>
+          </form>
+        </div>
       </div>
 
       <form action={updatePostWithId} className="space-y-6">
@@ -70,21 +77,19 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="category_id">Category</Label>
-            <select id="category_id" name="category_id" defaultValue={post.category_id ?? ""} className="w-full rounded-md border px-3 py-2 text-sm">
-              <option value="">None</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="cover_image">Cover Image</Label>
+          <ImageUpload name="cover_image" defaultValue={post.cover_image ?? undefined} />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="cover_image">Cover Image URL</Label>
-            <Input id="cover_image" name="cover_image" type="url" defaultValue={post.cover_image ?? ""} />
-          </div>
+        <div className="w-1/2 space-y-2">
+          <Label htmlFor="category_id">Category</Label>
+          <select id="category_id" name="category_id" defaultValue={post.category_id ?? ""} className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground">
+            <option value="">None</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-2">

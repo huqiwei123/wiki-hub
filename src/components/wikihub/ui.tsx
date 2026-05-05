@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
-import { ArrowRight, Calendar, Code2, Database, GitBranch, Package, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Code2, GitBranch, Search } from "lucide-react";
 import { Container } from "@/components/layout/container";
 
 export function PageHero({ title, subtitle }: { title: string; subtitle: string }) {
@@ -173,7 +173,14 @@ export function Pagination({ current = 1, total = 3, onChange }: { current?: num
 
   return (
     <div className="flex justify-center gap-2">
-      <button onClick={() => go(page - 1)} className="grid size-9 cursor-pointer place-items-center rounded-lg bg-muted text-xs font-medium text-muted-foreground">‹</button>
+      <button
+        type="button"
+        aria-label="Previous page"
+        onClick={() => go(page - 1)}
+        className="grid size-9 cursor-pointer place-items-center rounded-lg bg-muted text-xs font-medium text-muted-foreground"
+      >
+        <ArrowLeft className="size-4" />
+      </button>
       {Array.from({ length: total }, (_, i) => i + 1).map((p) => (
         <button
           key={p}
@@ -183,7 +190,14 @@ export function Pagination({ current = 1, total = 3, onChange }: { current?: num
           {p}
         </button>
       ))}
-      <button onClick={() => go(page + 1)} className="grid size-9 cursor-pointer place-items-center rounded-lg bg-muted text-xs font-medium text-muted-foreground">›</button>
+      <button
+        type="button"
+        aria-label="Next page"
+        onClick={() => go(page + 1)}
+        className="grid size-9 cursor-pointer place-items-center rounded-lg bg-muted text-xs font-medium text-muted-foreground"
+      >
+        <ArrowRight className="size-4" />
+      </button>
     </div>
   );
 }

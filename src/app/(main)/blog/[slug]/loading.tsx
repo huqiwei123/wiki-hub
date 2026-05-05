@@ -1,4 +1,6 @@
 export default function BlogPostLoading() {
+  const lineWidths = [92, 84, 76, 88, 71, 95, 80, 68];
+
   return (
     <div className="mx-auto max-w-5xl space-y-8 animate-pulse">
       <div className="glass-panel rounded-3xl">
@@ -17,8 +19,8 @@ export default function BlogPostLoading() {
       </div>
       <div className="glass-panel rounded-3xl px-5 py-8 sm:px-8 lg:px-10">
         <div className="space-y-3">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-4 w-full rounded bg-muted" style={{ width: `${70 + Math.random() * 30}%` }} />
+          {lineWidths.map((width, i) => (
+            <div key={i} className="h-4 rounded bg-muted" style={{ width: `${width}%` }} />
           ))}
         </div>
       </div>

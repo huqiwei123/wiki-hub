@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, CalendarDays, Clock3 } from "lucide-react";
+import { BookOpen, CalendarDays, Clock3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Post } from "@/types";
 

@@ -13,7 +13,10 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    const msg = error.message === "Email not confirmed"
+      ? "Please check your email and click the confirmation link before signing in."
+      : error.message;
+    redirect(`/login?error=${encodeURIComponent(msg)}`);
   }
 
   revalidatePath("/", "layout");
@@ -30,6 +33,7 @@ export async function signup(formData: FormData) {
       data: {
         username: formData.get("username") as string,
         display_name: formData.get("username") as string,
+        role: "admin",
       },
     },
   });
@@ -39,7 +43,7 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/login");
+  redirect("/login?registered=1");
 }
 
 export async function logout() {

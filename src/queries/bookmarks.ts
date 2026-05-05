@@ -11,6 +11,19 @@ export interface BookmarkedPost {
   category: string | null;
 }
 
+type BookmarkRow = {
+  posts: {
+    id: string;
+    slug: string;
+    title: string;
+    excerpt: string | null;
+    cover_image: string | null;
+    reading_time: number;
+    published_at: string | null;
+    categories: { name: string } | null;
+  } | null;
+};
+
 export async function getBookmarks(): Promise<BookmarkedPost[]> {
   const supabase = await createClient();
 
@@ -27,9 +40,9 @@ export async function getBookmarks(): Promise<BookmarkedPost[]> {
 
   if (error || !data) return [];
 
-  return data
-    .filter((b: any) => b.posts)
-    .map((b: any) => ({
+  return (data as unknown as BookmarkRow[])
+    .filter((b): b is BookmarkRow & { posts: NonNullable<BookmarkRow["posts"]> } => Boolean(b.posts))
+    .map((b) => ({
       id: b.posts.id,
       slug: b.posts.slug,
       title: b.posts.title,

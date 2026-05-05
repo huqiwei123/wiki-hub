@@ -41,7 +41,7 @@ export async function createPost(formData: FormData) {
       category_id: categoryId,
       author_id: user.id,
       cover_image: coverImage,
-      reading_time: readingTime(content).minutes,
+      reading_time: Math.round(readingTime(content).minutes),
       published,
       published_at: published ? new Date().toISOString() : null,
     })
@@ -91,7 +91,7 @@ export async function updatePost(postId: string, formData: FormData) {
       excerpt: excerpt || null,
       category_id: categoryId,
       cover_image: coverImage,
-      reading_time: readingTime(content).minutes,
+      reading_time: Math.round(readingTime(content).minutes),
       published,
       published_at: published && !existing?.published ? new Date().toISOString() : undefined,
     })
@@ -112,6 +112,7 @@ export async function updatePost(postId: string, formData: FormData) {
   revalidatePath("/blog");
   revalidatePath("/");
   revalidatePath(`/blog/${generateSlug(title)}`);
+  redirect(`/admin/posts/${postId}/edit?saved=1`);
 }
 
 export async function deletePost(postId: string) {

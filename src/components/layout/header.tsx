@@ -103,7 +103,7 @@ export function Header() {
         label="Search articles"
         className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]"
       >
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSearchOpen(false)} />
         <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
           <div className="flex items-center gap-3 border-b border-border px-4">
             <Search className="size-4 shrink-0 text-muted-foreground" />
@@ -135,6 +135,22 @@ export function Header() {
                 {r.excerpt && <span className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{r.excerpt}</span>}
               </Command.Item>
             ))}
+            {query.trim().length >= 2 && (
+              <Command.Item
+                value={`search:${query}`}
+                onSelect={() => {
+                  router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+                  setSearchOpen(false);
+                  setQuery("");
+                }}
+                className="mt-1 flex cursor-pointer items-center justify-between rounded-md border-t border-border px-3 py-2.5 pt-3 text-sm text-muted-foreground aria-selected:bg-muted"
+              >
+                <span>
+                  View all results for &ldquo;{query.trim()}&rdquo;
+                </span>
+                <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px]">Enter</kbd>
+              </Command.Item>
+            )}
           </Command.List>
         </div>
       </Command.Dialog>

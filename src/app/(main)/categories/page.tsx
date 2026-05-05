@@ -1,8 +1,22 @@
 import Link from "next/link";
-import { ArrowRight, Code2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { PageHero } from "@/components/wikihub/ui";
 import { Container } from "@/components/layout/container";
 import { getAllCategories } from "@/queries/categories";
+
+const ACCENT_COLORS = [
+  { bg: "#2563eb18", text: "#2563eb" },
+  { bg: "#05966918", text: "#059669" },
+  { bg: "#7c3aed18", text: "#7c3aed" },
+  { bg: "#d9770618", text: "#d97706" },
+  { bg: "#db277718", text: "#db2777" },
+  { bg: "#0284c718", text: "#0284c7" },
+];
+
+function categoryGradient(i: number) {
+  const c = ACCENT_COLORS[i % ACCENT_COLORS.length];
+  return `linear-gradient(135deg, ${c.bg}, transparent)` as const;
+}
 
 export default async function CategoriesPage() {
   const categories = await getAllCategories();
@@ -13,31 +27,38 @@ export default async function CategoriesPage() {
       <Container>
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           {categories.length > 0 ? (
-            categories.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/blog?category=${cat.slug}`}
-                className="rounded-xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="grid size-[52px] place-items-center rounded-xl bg-accent/15 text-accent">
-                      <Code2 className="size-5" />
-                    </span>
-                    <div>
-                      <h2 className="font-bold text-foreground">{cat.name}</h2>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {cat.post_count ?? 0} Articles
-                      </p>
+            categories.map((cat, i) => {
+              const accent = ACCENT_COLORS[i % ACCENT_COLORS.length];
+              return (
+                <Link
+                  key={cat.slug}
+                  href={`/blog?category=${cat.slug}`}
+                  className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  style={{ backgroundImage: categoryGradient(i) }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <span
+                        className="grid size-[52px] place-items-center rounded-xl text-lg font-bold"
+                        style={{ backgroundColor: accent.bg, color: accent.text }}
+                      >
+                        {cat.name[0]}
+                      </span>
+                      <div>
+                        <h2 className="font-bold text-foreground">{cat.name}</h2>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {cat.post_count ?? 0} Articles
+                        </p>
+                      </div>
                     </div>
+                    <ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5" />
                   </div>
-                  <ArrowRight className="size-4 text-muted-foreground" />
-                </div>
-                {cat.description && (
-                  <p className="mt-5 text-sm leading-6 text-muted-foreground">{cat.description}</p>
-                )}
-              </Link>
-            ))
+                  {cat.description && (
+                    <p className="mt-5 text-sm leading-6 text-muted-foreground">{cat.description}</p>
+                  )}
+                </Link>
+              );
+            })
           ) : (
             <div className="col-span-2 py-12 text-center text-sm text-muted-foreground">
               No categories yet.

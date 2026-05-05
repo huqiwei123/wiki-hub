@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef } from "react";
 import { MessageCircle, UserRound, ChevronDown, ChevronUp } from "lucide-react";
-import { createComment, deleteComment } from "@/actions/comments";
+import { createComment } from "@/actions/comments";
 import { getCommentReplies } from "@/queries/comments";
 import { LikeButton } from "./like-button";
 import { Separator } from "@/components/ui/separator";
@@ -124,7 +124,7 @@ interface CommentSectionProps {
 
 export function CommentSection({ postId, slug, initialComments, initialCount }: CommentSectionProps) {
   const formRef = useRef<HTMLFormElement>(null);
-  const [comments, setComments] = useState(initialComments);
+  const [comments] = useState(initialComments);
   const [count, setCount] = useState(initialCount);
 
   return (

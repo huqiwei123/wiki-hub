@@ -9,12 +9,12 @@ interface Backlink {
 }
 
 interface BacklinksProps {
-  slug: string;
+  slug?: string;
   forwardLinks: Backlink[];
   backlinks: Backlink[];
 }
 
-export function Backlinks({ slug: _slug, forwardLinks, backlinks }: BacklinksProps) {
+export function Backlinks({ forwardLinks, backlinks }: BacklinksProps) {
   if (backlinks.length === 0 && forwardLinks.length === 0) return null;
 
   return (

@@ -29,7 +29,7 @@ export default function TagsPage() {
         name: t.name,
         slug: t.slug,
         color: t.color,
-        post_count: (t as any).post_count ?? 0,
+        post_count: "post_count" in t && typeof t.post_count === "number" ? t.post_count : 0,
       })));
       setLoading(false);
     }).catch(() => setLoading(false));

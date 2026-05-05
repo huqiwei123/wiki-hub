@@ -2,6 +2,14 @@ import { NextRequest } from "next/server";
 
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
+function pruneExpiredEntries(now: number) {
+  for (const [key, entry] of rateLimitMap) {
+    if (now > entry.resetTime) {
+      rateLimitMap.delete(key);
+    }
+  }
+}
+
 export function rateLimit(
   request: NextRequest,
   limit = 30,
@@ -13,6 +21,8 @@ export function rateLimit(
     "anonymous";
 
   const now = Date.now();
+  pruneExpiredEntries(now);
+
   const entry = rateLimitMap.get(ip);
 
   if (!entry || now > entry.resetTime) {
@@ -29,13 +39,3 @@ export function rateLimit(
 
   return { allowed: true, remaining: limit - entry.count, resetTime: entry.resetTime };
 }
-
-// Clean up stale entries periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitMap) {
-    if (now > entry.resetTime) {
-      rateLimitMap.delete(key);
-    }
-  }
-}, 60_000);

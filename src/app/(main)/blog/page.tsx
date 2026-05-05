@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { PostCard } from "@/components/blog/post-card";
-import { FilterBar, PageHero, SectionHeader } from "@/components/wikihub/ui";
+import { PageHero, SectionHeader } from "@/components/wikihub/ui";
 import { Container } from "@/components/layout/container";
 import { getPublishedPosts, getPostsByCategory } from "@/queries/posts";
 import { getAllCategories } from "@/queries/categories";
@@ -27,7 +27,6 @@ export default async function BlogPage({ searchParams }: Props) {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const filterNames = ["All", ...categories.map((c) => c.name)];
   const activeFilterName = category
     ? categories.find((c) => c.slug === category)?.name ?? "All"
     : "All";

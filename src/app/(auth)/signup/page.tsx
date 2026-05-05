@@ -5,7 +5,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
-export default function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+
   return (
     <div className="flex min-h-screen items-center justify-center">
       <Card className="w-full max-w-md">
@@ -14,6 +20,11 @@ export default function SignupPage() {
           <CardDescription>Create a new account</CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+              {error}
+            </div>
+          )}
           <form action={signup} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>

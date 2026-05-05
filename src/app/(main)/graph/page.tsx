@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Check, Eye, Link2, Minus, Plus, RotateCcw, Search, X } from "lucide-react";
+import { BookOpen, Check, Minus, Plus, RotateCcw, X } from "lucide-react";
 import type React from "react";
 import { PageHero, SearchBox } from "@/components/wikihub/ui";
 import { Container } from "@/components/layout/container";

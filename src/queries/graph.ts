@@ -7,6 +7,30 @@ export interface PostLinkEdge {
   targetTitle: string;
 }
 
+type LinkedPost = { slug: string; title: string } | null;
+type PostLinkRow = {
+  source: LinkedPost;
+  target: LinkedPost;
+  target_slug: string;
+};
+type BacklinkRow = {
+  source: LinkedPost;
+};
+type ForwardLinkRow = {
+  target: LinkedPost;
+  target_slug: string;
+};
+type GraphPostRow = {
+  slug: string;
+  title: string;
+  categories: { name: string } | null;
+};
+type GraphLinkRow = {
+  source: { slug: string } | null;
+  target: { slug: string } | null;
+  target_slug: string;
+};
+
 export async function getPostLinks(slug: string): Promise<PostLinkEdge[]> {
   const timeout = withTimeoutSignal();
   try {
@@ -30,7 +54,7 @@ export async function getPostLinks(slug: string): Promise<PostLinkEdge[]> {
 
     if (error || !links) return [];
 
-    return links.map((l: any) => ({
+    return (links as unknown as PostLinkRow[]).map((l) => ({
       source: l.source?.slug ?? "",
       target: l.target?.slug ?? l.target_slug,
       sourceTitle: l.source?.title ?? "",
@@ -64,9 +88,9 @@ export async function getBacklinks(slug: string): Promise<Array<{ slug: string; 
 
     if (error || !links) return [];
 
-    return links
-      .filter((l: any) => l.source)
-      .map((l: any) => ({ slug: l.source.slug, title: l.source.title }));
+    return (links as unknown as BacklinkRow[])
+      .filter((l): l is BacklinkRow & { source: NonNullable<BacklinkRow["source"]> } => Boolean(l.source))
+      .map((l) => ({ slug: l.source.slug, title: l.source.title }));
   } catch {
     return [];
   } finally {
@@ -95,7 +119,7 @@ export async function getForwardLinks(slug: string): Promise<Array<{ slug: strin
 
     if (error || !links) return [];
 
-    return links.map((l: any) => ({
+    return (links as unknown as ForwardLinkRow[]).map((l) => ({
       slug: l.target?.slug ?? l.target_slug,
       title: l.target?.title ?? l.target_slug,
     }));
@@ -121,13 +145,13 @@ export async function getAllGraphData() {
         .abortSignal(timeout.signal),
     ]);
 
-    const nodes = (posts ?? []).map((p: any) => ({
+    const nodes = ((posts ?? []) as unknown as GraphPostRow[]).map((p) => ({
       id: p.slug,
       label: p.title,
       group: p.categories?.name ?? "Uncategorized",
     }));
 
-    const edges = (links ?? []).map((l: any) => ({
+    const edges = ((links ?? []) as unknown as GraphLinkRow[]).map((l) => ({
       source: l.source?.slug ?? "",
       target: l.target?.slug ?? l.target_slug,
     }));

@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -31,12 +31,11 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Protect admin routes
   if (pathname.startsWith("/admin")) {
     if (!user) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
-    // Check admin role via profile
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -48,12 +47,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect bookmarks route
   if (pathname.startsWith("/bookmarks") && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Redirect logged-in users away from auth pages
   if ((pathname === "/login" || pathname === "/signup") && user) {
     return NextResponse.redirect(new URL("/admin/dashboard", request.url));
   }
@@ -62,10 +59,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/bookmarks/:path*",
-    "/login",
-    "/signup",
-  ],
+  matcher: ["/admin/:path*", "/bookmarks/:path*", "/login", "/signup"],
 };

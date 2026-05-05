@@ -83,20 +83,29 @@ export default async function PostPage({ params }: Props) {
   return (
     <article className="mx-auto max-w-5xl space-y-8">
       <header className="glass-panel reveal-up overflow-hidden rounded-3xl">
-        <div className="relative min-h-72 p-6 sm:p-8 lg:p-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,oklch(0.72_0.13_205/.28),transparent_30%),radial-gradient(circle_at_82%_48%,oklch(0.76_0.15_74/.22),transparent_34%)]" />
+        <div className={`relative min-h-72 p-6 sm:p-8 lg:p-10 ${post.cover_image ? "text-white" : ""}`}>
+          {post.cover_image ? (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${post.cover_image})` }}
+            >
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" />
+            </div>
+          ) : (
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,oklch(0.72_0.13_205/.28),transparent_30%),radial-gradient(circle_at_82%_48%,oklch(0.76_0.15_74/.22),transparent_34%)]" />
+          )}
           <div className="relative">
             <div className="flex flex-wrap gap-2">
               {post.categories && (
-                <Badge variant="secondary" className="h-7 rounded-lg px-2.5">{post.categories.name}</Badge>
+                <Badge variant="secondary" className={post.cover_image ? "h-7 rounded-lg !border-white/30 !bg-white/15 !text-white px-2.5" : "h-7 rounded-lg px-2.5"}>{post.categories.name}</Badge>
               )}
               {post.tags?.map((tag) => (
-                <Badge key={tag.id} variant="outline" className="h-7 rounded-lg bg-background/35 px-2.5">{tag.name}</Badge>
+                <Badge key={tag.id} variant="outline" className={post.cover_image ? "h-7 rounded-lg !border-white/30 !bg-white/10 !text-white px-2.5" : "h-7 rounded-lg bg-background/35 px-2.5"}>{tag.name}</Badge>
               ))}
             </div>
-            <h1 className="mt-8 max-w-4xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">{post.title}</h1>
+            <h1 className={`mt-8 max-w-4xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl ${post.cover_image ? "[text-shadow:0_2px_12px_rgba(0,0,0,.6)]" : ""}`}>{post.title}</h1>
             {post.excerpt && (
-              <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground">{post.excerpt}</p>
+              <p className={`mt-5 max-w-2xl text-base leading-8 ${post.cover_image ? "text-white/80 [text-shadow:0_1px_8px_rgba(0,0,0,.5)]" : "text-muted-foreground"}`}>{post.excerpt}</p>
             )}
           </div>
         </div>
