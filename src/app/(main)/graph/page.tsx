@@ -6,8 +6,13 @@ import { BookOpen, Check, Eye, Link2, Minus, Plus, RotateCcw, Search, X } from "
 import type React from "react";
 import { PageHero, SearchBox } from "@/components/wikihub/ui";
 import { Container } from "@/components/layout/container";
-import { ForceGraph } from "@/components/knowledge/graph";
+import dynamic from "next/dynamic";
 import type { ForceGraphHandle } from "@/components/knowledge/graph";
+
+const ForceGraph = dynamic(
+  () => import("@/components/knowledge/graph").then((mod) => ({ default: mod.ForceGraph })),
+  { ssr: false, loading: () => <div className="flex h-[700px] items-center justify-center rounded-lg border border-border bg-card/90 text-sm text-muted-foreground">Loading graph...</div> }
+);
 import { getAllGraphData } from "@/queries/graph";
 import { getAllCategories } from "@/queries/categories";
 
@@ -31,7 +36,7 @@ export default function GraphPage() {
       setData(graphData);
       setCategories(cats.map((c) => ({ name: c.name, slug: c.slug })));
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
   }, []);
 
   const categoryItems = useMemo(

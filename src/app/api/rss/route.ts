@@ -2,11 +2,12 @@ import { getPublishedPosts } from "@/queries/posts";
 import { siteConfig } from "@/config/site";
 
 export async function GET() {
-  const { posts } = await getPublishedPosts(1, 20);
+  try {
+    const { posts } = await getPublishedPosts(1, 20);
 
-  const items = posts
-    .map(
-      (post) => `
+    const items = posts
+      .map(
+        (post) => `
     <item>
       <title><![CDATA[${post.title}]]></title>
       <link>${siteConfig.url}/blog/${post.slug}</link>
@@ -15,10 +16,10 @@ export async function GET() {
       <pubDate>${post.published_at ? new Date(post.published_at).toUTCString() : ""}</pubDate>
       <category>${post.categories?.name ?? ""}</category>
     </item>`
-    )
-    .join("\n");
+      )
+      .join("\n");
 
-  const rss = `<?xml version="1.0" encoding="UTF-8"?>
+    const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${siteConfig.name}</title>
@@ -31,10 +32,22 @@ export async function GET() {
   </channel>
 </rss>`;
 
-  return new Response(rss, {
-    headers: {
-      "Content-Type": "application/rss+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
-    },
-  });
+    return new Response(rss, {
+      headers: {
+        "Content-Type": "application/rss+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    });
+  } catch {
+    return new Response(
+      '<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Error</title><description>Feed temporarily unavailable</description></channel></rss>',
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/rss+xml; charset=utf-8",
+          "Cache-Control": "no-cache",
+        },
+      }
+    );
+  }
 }

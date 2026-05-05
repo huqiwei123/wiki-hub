@@ -8,8 +8,13 @@ import { Backlinks } from "@/components/knowledge/backlinks";
 import { getBacklinks, getForwardLinks } from "@/queries/graph";
 import { getComments, getCommentCount } from "@/queries/comments";
 import { getLikeCount } from "@/queries/likes";
-import { CommentSection } from "@/components/social/comment-section";
+import dynamic from "next/dynamic";
 import { LikeButton } from "@/components/social/like-button";
+
+const CommentSection = dynamic(
+  () => import("@/components/social/comment-section").then((mod) => ({ default: mod.CommentSection })),
+  { loading: () => <div className="glass-panel rounded-3xl px-5 py-8 text-center text-sm text-muted-foreground">Loading comments...</div> }
+);
 import { ShareButtons } from "@/components/social/share-buttons";
 import { createClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/config/site";

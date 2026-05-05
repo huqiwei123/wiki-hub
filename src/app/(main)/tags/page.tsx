@@ -32,7 +32,7 @@ export default function TagsPage() {
         post_count: (t as any).post_count ?? 0,
       })));
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
   }, []);
 
   const sorted = useMemo(() => {

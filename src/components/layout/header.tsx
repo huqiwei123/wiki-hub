@@ -71,7 +71,7 @@ export function Header() {
             </span>
             <span className="truncate text-sm font-bold leading-tight">{siteConfig.name}</span>
           </Link>
-          <nav className="hidden items-center gap-7 md:flex">
+          <nav aria-label="Main navigation" className="hidden items-center gap-7 md:flex">
             {siteConfig.nav.map((item) => (
               <NavLink key={item.href} item={item} active={pathname === item.href || pathname.startsWith(`${item.href}/`)} />
             ))}
@@ -90,7 +90,7 @@ export function Header() {
             <ThemeToggle />
           </div>
         </Container>
-        <nav className="flex gap-5 overflow-x-auto border-b border-border bg-card/90 px-6 py-3 backdrop-blur-xl md:hidden">
+        <nav aria-label="Mobile navigation" className="flex gap-5 overflow-x-auto border-b border-border bg-card/90 px-6 py-3 backdrop-blur-xl md:hidden">
           {siteConfig.nav.map((item) => (
             <NavLink key={item.href} item={item} active={pathname === item.href || pathname.startsWith(`${item.href}/`)} compact />
           ))}
@@ -156,6 +156,7 @@ function NavLink({
   return (
     <Link
       href={item.href}
+      aria-current={active ? "page" : undefined}
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground",
         active && "text-foreground",

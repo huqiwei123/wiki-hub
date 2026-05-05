@@ -6,7 +6,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <div className="relative flex min-h-dvh w-full flex-col bg-transparent">
 {/* <DynamicBackground /> */}
       <Header />
-      <main className="relative z-10 w-full flex-1">
+      <main id="main-content" className="relative z-10 w-full flex-1">
         {children}
       </main>
     </div>
