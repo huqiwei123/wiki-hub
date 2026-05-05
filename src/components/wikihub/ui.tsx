@@ -4,7 +4,6 @@ import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
 import { ArrowRight, Calendar, Code2, Database, GitBranch, Package, Search } from "lucide-react";
-import { articles, categories } from "@/lib/static-content";
 import { Container } from "@/components/layout/container";
 
 export function PageHero({ title, subtitle }: { title: string; subtitle: string }) {
@@ -30,54 +29,83 @@ export function SectionHeader({ title, subtitle, action }: { title: string; subt
   );
 }
 
-export function ArticleCard({ article = articles[0] }: { article?: (typeof articles)[number] }) {
-  const Icon = article.icon === "database" ? Database : article.icon === "component" ? Package : Code2;
+export function ArticleCard({
+  article,
+}: {
+  article: {
+    slug: string;
+    title: string;
+    excerpt: string | null;
+    category: string | null;
+    cover_image: string | null;
+    published_at: string | null;
+    reading_time: number;
+  };
+}) {
+  const gradient = article.slug === "deep-dive" ? "from-indigo-500 to-violet-500"
+    : article.slug === "scalable-apis" ? "from-emerald-500 to-teal-500"
+    : "from-orange-500 to-red-500";
 
   return (
-    <Link href="/blog/deep-dive" className="overflow-hidden rounded-lg border border-border bg-card/90 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className={`relative grid h-[200px] overflow-hidden place-items-center bg-gradient-to-br ${article.gradient} text-white`}>
-        {"image" in article && article.image ? (
+    <Link href={`/blog/${article.slug}`} className="overflow-hidden rounded-lg border border-border bg-card/90 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className={`relative grid h-[200px] overflow-hidden place-items-center bg-gradient-to-br ${gradient} text-white`}>
+        {article.cover_image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={article.image}
+            src={article.cover_image}
             alt=""
             className="absolute inset-0 h-full w-full object-cover transition duration-500 hover:scale-105"
           />
         ) : (
-          <Icon className="size-8 opacity-80" />
+          <Code2 className="size-8 opacity-80" />
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/10 to-white/0" />
       </div>
       <div className="p-5">
-        <span className="inline-flex h-6 items-center rounded-md bg-accent/15 px-2 text-[11px] font-medium text-accent">{article.category}</span>
+        {article.category && (
+          <span className="inline-flex h-6 items-center rounded-md bg-accent/15 px-2 text-[11px] font-medium text-accent">{article.category}</span>
+        )}
         <h3 className="mt-3 line-clamp-2 text-base font-bold leading-snug text-foreground">{article.title}</h3>
-        <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{article.excerpt}</p>
+        {article.excerpt && (
+          <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{article.excerpt}</p>
+        )}
         <div className="mt-5 flex items-center justify-between text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Calendar className="size-3" />
-            {article.date}
-          </span>
-          <span>{article.read}</span>
+          {article.published_at && (
+            <span className="inline-flex items-center gap-1">
+              <Calendar className="size-3" />
+              {new Date(article.published_at).toLocaleDateString()}
+            </span>
+          )}
+          <span>{article.reading_time} min read</span>
         </div>
       </div>
     </Link>
   );
 }
 
-export function CompactCategoryCard({ item = categories[0] }: { item?: (typeof categories)[number] }) {
+export function CompactCategoryCard({
+  item,
+}: {
+  item: {
+    name: string;
+    slug: string;
+    description?: string | null;
+    post_count?: number;
+  };
+}) {
   return (
-    <Link href="/categories" className="rounded-lg border border-border bg-card/90 p-5 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
+    <Link href={`/categories?category=${item.slug}`} className="rounded-lg border border-border bg-card/90 p-5 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-center justify-between">
-        <span className="grid size-11 place-items-center rounded-lg" style={{ backgroundColor: item.bg, color: item.color }}>
+        <span className="grid size-11 place-items-center rounded-lg bg-accent/15 text-accent">
           <Code2 className="size-5" />
         </span>
         <ArrowRight className="size-4 text-muted-foreground" />
       </div>
       <h3 className="mt-5 font-bold text-foreground">{item.name}</h3>
-      <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
-        Programming tutorials, infrastructure guides, frontend patterns, and development best practices.
-      </p>
-      <p className="mt-4 text-[11px] text-muted-foreground">{item.count} articles</p>
+      {item.description && (
+        <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{item.description}</p>
+      )}
+      <p className="mt-4 text-[11px] text-muted-foreground">{item.post_count ?? 0} articles</p>
     </Link>
   );
 }

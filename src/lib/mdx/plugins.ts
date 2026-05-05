@@ -2,6 +2,7 @@ import remarkGfm from "remark-gfm";
 import rehypePrettyCode from "rehype-pretty-code";
 import { Options as RehypePrettyCodeOptions } from "rehype-pretty-code";
 import type { PluggableList } from "unified";
+import { remarkWikiLinks } from "./remark-wiki-links";
 
 export const rehypePrettyCodeOptions: RehypePrettyCodeOptions = {
   theme: {
@@ -13,7 +14,7 @@ export const rehypePrettyCodeOptions: RehypePrettyCodeOptions = {
 };
 
 export function getRemarkPlugins(): PluggableList {
-  return [remarkGfm];
+  return [remarkGfm, remarkWikiLinks];
 }
 
 export function getRehypePlugins(): PluggableList {

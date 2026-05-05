@@ -10,12 +10,12 @@ type PostCardProps = {
 
 export function PostCard({ post }: PostCardProps) {
   return (
-    <article className="group reveal-up">
+    <article className="group reveal-up h-full">
       <Link
         href={`/blog/${post.slug}`}
-        className="glass-panel grid overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_100px_rgba(17,24,39,0.18)] sm:grid-cols-[minmax(220px,0.42fr)_1fr]"
+        className="glass-panel flex h-full flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_100px_rgba(17,24,39,0.18)]"
       >
-        <div className="relative min-h-56 overflow-hidden bg-muted sm:min-h-full">
+        <div className="relative shrink-0 overflow-hidden bg-muted" style={{ aspectRatio: "2/1" }}>
           {post.cover_image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -32,46 +32,39 @@ export function PostCard({ post }: PostCardProps) {
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-          <div className="absolute bottom-4 left-4 flex items-center gap-2 text-xs font-medium text-white/85">
-            <BookOpen className="size-3.5" />
+          <div className="absolute bottom-3 left-4 flex items-center gap-1.5 text-xs font-medium text-white/85">
+            <BookOpen className="size-3" />
             <span>Article</span>
           </div>
         </div>
-        <div className="flex min-w-0 flex-col p-5 sm:p-6">
-          <div className="mb-5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex flex-1 flex-col p-4">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             {post.categories && (
-              <Badge variant="secondary" className="h-7 rounded-lg border border-white/40 bg-background/50 px-2.5 text-xs dark:border-white/10">
+              <Badge variant="secondary" className="h-6 rounded-md border border-white/40 bg-background/50 px-2 text-xs dark:border-white/10">
                 {post.categories.name}
               </Badge>
             )}
             {post.published_at && (
-              <span className="inline-flex items-center gap-1.5">
-                <CalendarDays className="size-3.5" />
-                <time dateTime={post.published_at}>
-                  {new Date(post.published_at).toLocaleDateString()}
-                </time>
+              <span className="inline-flex items-center gap-1">
+                <CalendarDays className="size-3" />
+                {new Date(post.published_at).toLocaleDateString()}
               </span>
             )}
-            <span className="inline-flex items-center gap-1.5">
-              <Clock3 className="size-3.5" />
-              {post.reading_time} min read
+            <span className="inline-flex items-center gap-1">
+              <Clock3 className="size-3" />
+              {post.reading_time}m
             </span>
           </div>
-          <div className="flex items-start justify-between gap-4">
-            <h2 className="text-balance text-2xl font-semibold tracking-tight transition-colors group-hover:text-primary">
-              {post.title}
-            </h2>
-            <span className="mt-1 grid size-9 shrink-0 place-items-center rounded-xl border border-white/45 bg-background/40 text-muted-foreground transition-all group-hover:-translate-y-0.5 group-hover:bg-primary group-hover:text-primary-foreground dark:border-white/10">
-              <ArrowUpRight className="size-4" />
-            </span>
-          </div>
+          <h2 className="mt-3 text-balance text-base font-semibold tracking-tight transition-colors group-hover:text-primary">
+            {post.title}
+          </h2>
           {post.excerpt && (
-            <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">{post.excerpt}</p>
+            <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">{post.excerpt}</p>
           )}
           {post.tags && post.tags.length > 0 && (
-            <div className="mt-6 flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
-                <Badge key={tag.id} variant="outline" className="rounded-lg bg-background/35 text-xs">
+            <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
+              {post.tags.map((tag, i) => (
+                <Badge key={tag.id ?? i} variant="outline" className="rounded-md bg-background/35 text-xs">
                   {tag.name}
                 </Badge>
               ))}

@@ -13,9 +13,9 @@ Next.js 16 full-stack blog with bidirectional links, knowledge graph, and social
 | Database | Supabase (Postgres 15) — tables not yet created |
 | Auth | `@supabase/ssr` — cookie-based SSR, middleware session refresh |
 | MDX | `next-mdx-remote/rsc` + `remark-gfm` + `rehype-pretty-code` (Shiki) |
-| 3D BG | `three` — dynamically imported, interactive Rubik's cube background |
+| 3D BG | `three` — dynamically imported, Rubik's cube background (disabled by default) |
 | Theme | Custom `ThemeProvider` — `next-themes` removed due to `<script>` tag incompatibility with Next.js 16 |
-| Editor | CodeMirror 6 (planned, not yet implemented) |
+| Search | Custom command palette (Ctrl+K) in header — simple client-side filtering, not yet cmdk |
 
 ## Build & Run
 
@@ -34,13 +34,13 @@ src/
 ├── app/
 │   ├── (main)/              # Public pages (layout group)
 │   │   ├── page.tsx                   # Home — hero, featured articles, categories, graph preview
-│   │   ├── blog/page.tsx              # Article list with filter bar
+│   │   ├── blog/page.tsx              # Article list with FilterBar + Pagination
 │   │   ├── blog/[slug]/page.tsx       # Article detail (MDX render)
-│   │   ├── tags/page.tsx              # Tag cloud + all tags grid
-│   │   ├── categories/page.tsx        # Category cards
-│   │   ├── graph/page.tsx             # Knowledge graph (placeholder UI)
+│   │   ├── tags/page.tsx              # Tag cloud + all tags grid with sort/search/pagination
+│   │   ├── categories/page.tsx        # Category cards with filter + pagination
+│   │   ├── graph/page.tsx             # Knowledge graph with zoom, category filter, article panel
 │   │   ├── about/page.tsx             # About page with features + tech stack
-│   │   └── layout.tsx                 # Main layout: DynamicBackground + Header + content
+│   │   └── layout.tsx                 # Main layout: Header + content (DynamicBackground disabled)
 │   ├── (auth)/              # Auth route group
 │   │   ├── login/page.tsx
 │   │   └── signup/page.tsx
@@ -51,21 +51,22 @@ src/
 │   │   └── posts/[id]/edit/page.tsx   # Edit post form
 │   ├── layout.tsx                     # Root layout: fonts, ThemeProvider, metadata
 │   ├── sitemap.ts
-│   └── globals.css                    # Tailwind, CSS vars, glass/dynamic utilities, animations
+│   └── globals.css                    # Tailwind, CSS vars (light/dark semantic tokens), animations
 ├── components/
 │   ├── ui/                  # shadcn/ui primitives (button, badge, card, input, textarea, sheet, dialog, etc.)
 │   ├── blog/post-card.tsx   # ArticleCard component (unused — superseded by wikihub/ui)
 │   ├── layout/
 │   │   ├── container.tsx              # Max-width wrapper
-│   │   ├── header.tsx                 # Sticky header with nav + search placeholder + ThemeToggle
-│   │   ├── site-footer.tsx            # Footer with links + newsletter form
-│   │   └── dynamic-background.tsx     # Three.js 3D Rubik's cube animated background
+│   │   ├── header.tsx                 # Sticky header with nav, search command palette (Ctrl+K), ThemeToggle
+│   │   ├── site-footer.tsx            # Footer with links + functional newsletter subscribe form
+│   │   └── dynamic-background.tsx     # Three.js 3D Rubik's cube (disabled in layout, import commented out)
 │   ├── mdx/mdx-content.tsx  # MDXRemote wrapper with prose styling
 │   ├── theme/
 │   │   ├── theme-provider.tsx         # Custom ThemeContext + localStorage persistence
 │   │   └── theme-toggle.tsx           # Sun/Moon toggle button
 │   └── wikihub/ui.tsx       # Reusable UI blocks: PageHero, SectionHeader, ArticleCard,
-│                              #   CompactCategoryCard, FilterButton, SearchBox, GraphPlaceholder
+│                                #   CompactCategoryCard, FilterBar, FilterButton, SortBar,
+│                                #   SearchBox (real <input>), Pagination, GraphPlaceholder
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts        # Browser client (anon key, RLS)
@@ -73,7 +74,7 @@ src/
 │   │   ├── admin.ts         # Admin client (service role, bypasses RLS)
 │   │   └── public.ts        # Public readonly client (anon key, no auth, 900ms timeout)
 │   ├── mdx/plugins.ts       # remark + rehype plugin configuration
-│   ├── static-content.ts    # Mock data for static UI pages (articles, categories, tags, graphStats)
+│   ├── static-content.ts    # Mock data (articles with slugs, categories, tags, graphStats)
 │   └── utils.ts             # cn() — clsx + tailwind-merge
 ├── actions/
 │   ├── auth.ts              # login, signup, logout Server Actions
@@ -88,7 +89,53 @@ src/
 └── middleware.ts            # Auth session refresh + route protection (deprecated → proxy)
 ```
 
+## MCP & Agent Skills
+
+- **Supabase MCP** — configured in `.mcp.json` (HTTP transport, project `wnxztcrtksiuhwbyctd`)
+  - Requires OAuth authentication (`claude /mcp`)
+  - Can run SQL, manage schema, apply migrations directly from Claude
+- **Agent Skills** — installed in `.claude/skills/` only (symlinks for other AI tools gitignored)
+  - `supabase` — Supabase product guidance (Auth, DB, Edge Functions, Realtime, etc.)
+  - `supabase-postgres-best-practices` — Postgres optimization references (indexes, RLS, pagination, etc.)
+
 ## Key Architecture Decisions
+
+### All Public Pages Are Client Components
+
+Every page under `(main)/` and the shared `wikihub/ui.tsx` components use `"use client"`. This was necessary for interactive state (search, filter, sort, pagination, zoom, theme toggle) and because the static mock data doesn't require server-side data fetching. Admin pages remain server/dynamic where they use real Supabase queries.
+
+### Dark Mode Semantic Tokens
+
+Dark mode uses class-based strategy: `@custom-variant dark (&:is(.dark *))` in Tailwind v4. CSS variables in `.dark` scope define theme colors. Critical rule:
+
+- **`--primary-foreground` and `--accent-foreground` must use dark text** (e.g., `#0f172a`) because `--primary` and `--accent` are light colors in dark mode.
+- **Never use hardcoded Tailwind colors** (`bg-white`, `text-slate-900`, `bg-blue-600`) on themed elements — always use semantic tokens: `bg-card`, `text-foreground`, `text-muted-foreground`, `bg-primary`, `text-primary-foreground`, etc.
+
+```css
+.dark {
+  --background: #07111f;
+  --foreground: #e5edf8;
+  --card: #0f1b2d;
+  --primary: #e5edf8;
+  --primary-foreground: #0f172a;   /* dark text on light primary */
+  --muted: #17263c;
+  --muted-foreground: #9eb1ca;
+  --accent: #60a5fa;
+  --accent-foreground: #0f172a;    /* dark text on light accent */
+  --border: rgba(148, 163, 184, 0.2);
+}
+```
+
+### Data-Driven Colors (Categories & Tags)
+
+`static-content.ts` provides colors for categories and tags that must work in both themes. Use semi-transparent versions of the text color as backgrounds:
+
+```ts
+// ✅ Works in light + dark:
+{ name: "Development", color: "#2563eb", bg: "#2563eb18" }
+// ❌ Only works in light:
+{ name: "Development", color: "#2563eb", bg: "#eff6ff" }
+```
 
 ### Supabase Clients (3-tier)
 
@@ -107,7 +154,7 @@ src/
 
 ### Static Content Layer
 
-`src/lib/static-content.ts` provides mock data (articles, categories, tags, graphStats) for all public pages. This means the frontend renders correctly even though database tables aren't yet created on Supabase. When the database is ready, pages that use query functions (`blog/[slug]`, admin/*) will fetch real data.
+`src/lib/static-content.ts` provides mock data (articles with slugs, categories, tags, graphStats) for all public pages. Articles include a `slug` field for routing (`/blog/[slug]`). The frontend renders correctly even though database tables aren't yet created on Supabase.
 
 ### Caching Strategy
 
@@ -124,7 +171,7 @@ export const getAllCategories = unstable_cache(
 
 **Project ref:** `wnxztcrtksiuhwbyctd` (Supabase dashboard: https://supabase.com/dashboard/project/wnxztcrtksiuhwbyctd)
 
-3 migration files in `supabase/migrations/` need to be executed via SQL Editor:
+3 migration files in `supabase/migrations/` can be run via Supabase MCP or SQL Editor:
 
 1. **`001_create_profiles.sql`** — `profiles` table (extends `auth.users`), auto-create trigger on signup, RLS
 2. **`002_create_categories_tags.sql`** — `categories` + `tags` tables, admin-only write RLS
@@ -140,15 +187,16 @@ Environment: `SUPABASE_SERVICE_ROLE_KEY` is empty in `.env.local` — admin clie
 - Protects `/bookmarks` — redirects to `/login` if no user
 - Redirects logged-in users away from `/login` and `/signup`
 
-## Pending Work (Phase 1 Complete, Phase 2+ Remaining)
+## Pending Work
 
-- [ ] Run database migrations on Supabase
+- [ ] Run database migrations on Supabase (now possible via MCP)
 - [ ] Set `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`
 - [ ] CodeMirror editor for admin post write/edit pages
 - [ ] Bidirectional links: `remark-wiki-links` plugin + `post_links` table
-- [ ] D3.js knowledge graph (ForceGraph page is static placeholder)
-- [ ] Full-text search with `cmdk` command palette (`Cmd+K`)
+- [ ] D3.js knowledge graph visualization (page UI is ready, graph is placeholder)
+- [ ] Full `cmdk` command palette with real full-text search (current search is simple client-side filter)
 - [ ] Comments with Supabase Realtime
 - [ ] Bookmarks, likes, subscriptions
 - [ ] RSS feed, dynamic OG images
 - [ ] Move `middleware.ts` → `proxy.ts` (Next.js 16 deprecation)
+- [ ] Re-enable DynamicBackground (currently commented out in layout)

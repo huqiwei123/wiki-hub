@@ -3,18 +3,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowRight, BookOpenText, FolderTree, GitBranch, Info, Search, Tags } from "lucide-react";
+import { Bookmark, BookOpenText, FolderTree, GitBranch, Info, Search, Tags } from "lucide-react";
+import { Command } from "cmdk";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { Container } from "@/components/layout/container";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { articles } from "@/lib/static-content";
 
 const navIcons = {
   "/blog": BookOpenText,
   "/tags": Tags,
   "/categories": FolderTree,
   "/graph": GitBranch,
+  "/bookmarks": Bookmark,
   "/about": Info,
 };
 
@@ -23,28 +24,41 @@ export function Header() {
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Array<{ slug: string; title: string; excerpt: string | null }>>([]);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const filtered = query
-    ? articles
-        .filter((a) => a.title.toLowerCase().includes(query.toLowerCase()))
-        .slice(0, 5)
-    : [];
+  const doSearch = useCallback(async (q: string) => {
+    if (q.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
+      const json = await res.json();
+      setResults(json.results ?? []);
+    } catch {
+      setResults([]);
+    }
+  }, []);
+
+  const handleInputChange = useCallback((value: string) => {
+    setQuery(value);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => doSearch(value), 250);
+  }, [doSearch]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
-        setSearchOpen(true);
+        setSearchOpen((o) => !o);
       }
-      if (e.key === "Escape") setSearchOpen(false);
     };
     document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, []);
-
-  const close = useCallback(() => {
-    setSearchOpen(false);
-    setQuery("");
+    return () => {
+      document.removeEventListener("keydown", handler);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
 
   return (
@@ -83,50 +97,47 @@ export function Header() {
         </nav>
       </header>
 
-      {searchOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" role="dialog" aria-modal="true">
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={close} />
-          <div className="relative z-10 w-full max-w-lg rounded-xl border border-border bg-card shadow-2xl">
-            <div className="flex items-center gap-3 border-b border-border px-4">
-              <Search className="size-4 text-muted-foreground" />
-              <input
-                autoFocus
-                type="text"
-                placeholder="Search articles..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="h-12 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && filtered.length > 0) {
-                    router.push(`/blog`);
-                    close();
-                  }
-                }}
-              />
-              <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">Esc</kbd>
-            </div>
-            {filtered.length > 0 ? (
-              <div className="py-2">
-                {filtered.map((article) => (
-                  <Link
-                    key={article.title}
-                    href={`/blog/${article.slug}`}
-                    onClick={close}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted"
-                  >
-                    <span className="flex-1 truncate">{article.title}</span>
-                    <ArrowRight className="size-3.5 text-muted-foreground" />
-                  </Link>
-                ))}
-              </div>
-            ) : query ? (
-              <div className="px-4 py-8 text-center text-sm text-muted-foreground">No articles found.</div>
-            ) : (
-              <div className="px-4 py-8 text-center text-sm text-muted-foreground">Type to search articles...</div>
-            )}
+      <Command.Dialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        label="Search articles"
+        className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]"
+      >
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+        <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+          <div className="flex items-center gap-3 border-b border-border px-4">
+            <Search className="size-4 shrink-0 text-muted-foreground" />
+            <Command.Input
+              autoFocus
+              placeholder="Search articles..."
+              value={query}
+              onValueChange={handleInputChange}
+              className="h-12 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            />
+            <kbd className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">Esc</kbd>
           </div>
+          <Command.List className="max-h-64 overflow-y-auto p-2">
+            <Command.Empty className="px-4 py-8 text-center text-sm text-muted-foreground">
+              {query.length < 2 ? "Type to search articles..." : "No articles found."}
+            </Command.Empty>
+            {results.map((r) => (
+              <Command.Item
+                key={r.slug}
+                value={r.title}
+                onSelect={() => {
+                  router.push(`/blog/${r.slug}`);
+                  setSearchOpen(false);
+                  setQuery("");
+                }}
+                className="flex cursor-pointer flex-col rounded-md px-3 py-2.5 text-sm text-foreground aria-selected:bg-muted"
+              >
+                <span className="font-medium">{r.title}</span>
+                {r.excerpt && <span className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{r.excerpt}</span>}
+              </Command.Item>
+            ))}
+          </Command.List>
         </div>
-      )}
+      </Command.Dialog>
     </>
   );
 }

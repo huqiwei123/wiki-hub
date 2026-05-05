@@ -1,38 +1,40 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, GitBranch } from "lucide-react";
-import { ArticleCard, CompactCategoryCard, SectionHeader, SearchBox } from "@/components/wikihub/ui";
+import { ArticleCard, CompactCategoryCard, SectionHeader } from "@/components/wikihub/ui";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Container } from "@/components/layout/container";
-import { articles, categories } from "@/lib/static-content";
+import { getRecentPosts } from "@/queries/posts";
+import { getAllCategories } from "@/queries/categories";
 
-export default function HomePage() {
-  const [search, setSearch] = useState("");
+export default async function HomePage() {
+  const [posts, categories] = await Promise.all([
+    getRecentPosts(3),
+    getAllCategories(),
+  ]);
+
+  const totalPosts = 142;
+  const totalTags = 48;
+  const totalLinks = 256;
 
   return (
     <div className="w-full">
       <section className="w-full border-b border-border bg-muted/75 py-12 text-center backdrop-blur-xl">
         <Container>
           <div className="mx-auto max-w-4xl">
-          <div className="mx-auto inline-flex h-7 items-center rounded-full bg-accent/15 px-3 text-xs font-medium text-accent">
-            Personal Knowledge Base
-          </div>
-          <h1 className="mx-auto mt-5 max-w-2xl text-5xl font-extrabold tracking-tight text-foreground">
-            Explore, Learn &amp; Connect Ideas
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-muted-foreground">
-            A curated collection of technical insights, deep dives, and interconnected knowledge. Discover patterns across topics through bidirectional links and visual exploration.
-          </p>
-          <div className="mx-auto mt-8 max-w-xl">
-            <SearchBox placeholder="Search articles, tags, or topics..." value={search} onChange={setSearch} />
-          </div>
-          <div className="mt-6 flex justify-center gap-8 text-xs text-muted-foreground">
-            <span>142 Articles</span>
-            <span>48 Tags</span>
-            <span>256 Links</span>
-          </div>
+            <div className="mx-auto inline-flex h-7 items-center rounded-full bg-accent/15 px-3 text-xs font-medium text-accent">
+              Personal Knowledge Base
+            </div>
+            <h1 className="mx-auto mt-5 max-w-2xl text-5xl font-extrabold tracking-tight text-foreground">
+              Explore, Learn &amp; Connect Ideas
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-muted-foreground">
+              A curated collection of technical insights, deep dives, and interconnected knowledge. Discover patterns across topics through bidirectional links and visual exploration.
+            </p>
+            <div className="mt-6 flex justify-center gap-8 text-xs text-muted-foreground">
+              <span>{totalPosts} Articles</span>
+              <span>{totalTags} Tags</span>
+              <span>{totalLinks} Links</span>
+            </div>
           </div>
         </Container>
       </section>
@@ -48,8 +50,19 @@ export default function HomePage() {
           }
         />
         <div className="mt-5 grid gap-6 md:grid-cols-3">
-          {articles.map((article) => (
-            <ArticleCard key={article.title} article={article} />
+          {posts.map((post) => (
+            <ArticleCard
+              key={post.slug}
+              article={{
+                slug: post.slug,
+                title: post.title,
+                excerpt: post.excerpt,
+                category: post.categories?.name ?? null,
+                cover_image: post.cover_image,
+                published_at: post.published_at,
+                reading_time: post.reading_time,
+              }}
+            />
           ))}
         </div>
       </Container>
@@ -57,8 +70,8 @@ export default function HomePage() {
       <Container className="pb-10">
         <SectionHeader title="Browse by Category" subtitle="Explore content organized by technical domain" />
         <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {categories.slice(0, 4).map((item) => (
-            <CompactCategoryCard key={item.name} item={item} />
+          {categories.slice(0, 4).map((cat) => (
+            <CompactCategoryCard key={cat.slug} item={cat} />
           ))}
         </div>
       </Container>

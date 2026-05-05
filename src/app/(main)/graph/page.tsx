@@ -1,24 +1,59 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { BookOpen, Check, Minus, Plus, RotateCcw, Search, X } from "lucide-react";
+import { BookOpen, Check, Eye, Link2, Minus, Plus, RotateCcw, Search, X } from "lucide-react";
 import type React from "react";
-import { GraphPlaceholder, PageHero, SearchBox } from "@/components/wikihub/ui";
+import { PageHero, SearchBox } from "@/components/wikihub/ui";
 import { Container } from "@/components/layout/container";
-import { categories, graphStats } from "@/lib/static-content";
+import { ForceGraph } from "@/components/knowledge/graph";
+import type { ForceGraphHandle } from "@/components/knowledge/graph";
+import { getAllGraphData } from "@/queries/graph";
+import { getAllCategories } from "@/queries/categories";
+
+interface GraphData {
+  nodes: Array<{ id: string; label: string; group: string }>;
+  edges: Array<{ source: string; target: string }>;
+}
 
 export default function GraphPage() {
+  const [data, setData] = useState<GraphData>({ nodes: [], edges: [] });
+  const [categories, setCategories] = useState<Array<{ name: string; slug: string }>>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Categories");
-  const [zoom, setZoom] = useState(1);
   const [viewMode, setViewMode] = useState<"force" | "labels">("force");
-  const [selectedArticle, setSelectedArticle] = useState<string | null>("Deep Dive into TypeScript 5.0 Decorators");
+  const [selectedArticle, setSelectedArticle] = useState<{ id: string; label: string } | null>(null);
+  const graphRef = useRef<ForceGraphHandle>(null);
+
+  useEffect(() => {
+    Promise.all([getAllGraphData(), getAllCategories()]).then(([graphData, cats]) => {
+      setData(graphData);
+      setCategories(cats.map((c) => ({ name: c.name, slug: c.slug })));
+      setLoading(false);
+    });
+  }, []);
 
   const categoryItems = useMemo(
-    () => ["All Categories", ...categories.slice(0, 4).map((cat) => cat.name)],
-    []
+    () => ["All Categories", ...categories.map((c) => c.name)],
+    [categories]
   );
+
+  const filteredNodes = useMemo(() => {
+    if (activeCategory === "All Categories") return data.nodes;
+    return data.nodes.filter((n) => n.group === activeCategory);
+  }, [data.nodes, activeCategory]);
+
+  const filteredEdges = useMemo(() => {
+    const nodeIds = new Set(filteredNodes.map((n) => n.id));
+    return data.edges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target));
+  }, [data.edges, filteredNodes]);
+
+  const graphStats = [
+    { label: "Total Articles", value: data.nodes.length, color: "#2563eb" },
+    { label: "Total Connections", value: data.edges.length, color: "#059669" },
+    { label: "Orphan Articles", value: data.nodes.length - new Set(data.edges.flatMap((e) => [e.source, e.target])).size, color: "#dc2626" },
+  ];
 
   return (
     <div className="w-full pb-16">
@@ -65,17 +100,16 @@ export default function GraphPage() {
           <section className="space-y-5">
             <div className="flex h-[52px] items-center justify-between rounded-lg border border-border bg-card px-3 shadow-sm">
               <div className="flex gap-2">
-                <button onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))} className="grid size-8 cursor-pointer place-items-center rounded-md bg-muted text-muted-foreground hover:bg-muted/80">
+                <button onClick={() => graphRef.current?.zoomOut()} className="grid size-8 cursor-pointer place-items-center rounded-md bg-muted text-muted-foreground hover:bg-muted/80">
                   <Minus className="size-4" />
                 </button>
-                <button onClick={() => setZoom((z) => Math.min(2, z + 0.25))} className="grid size-8 cursor-pointer place-items-center rounded-md bg-muted text-muted-foreground hover:bg-muted/80">
+                <button onClick={() => graphRef.current?.zoomIn()} className="grid size-8 cursor-pointer place-items-center rounded-md bg-muted text-muted-foreground hover:bg-muted/80">
                   <Plus className="size-4" />
                 </button>
-                <button onClick={() => setZoom(1)} className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md bg-muted px-3 text-xs font-medium text-muted-foreground hover:bg-muted/80">
+                <button onClick={() => graphRef.current?.zoomReset()} className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md bg-muted px-3 text-xs font-medium text-muted-foreground hover:bg-muted/80">
                   <RotateCcw className="size-4" />
                   Reset View
                 </button>
-                <span className="ml-2 self-center text-xs text-muted-foreground">{Math.round(zoom * 100)}%</span>
               </div>
               <div className="flex gap-2">
                 <button
@@ -92,7 +126,15 @@ export default function GraphPage() {
                 </button>
               </div>
             </div>
-            <GraphPlaceholder className="h-[700px]" />
+            {loading ? (
+              <div className="flex h-[700px] items-center justify-center rounded-lg border border-border bg-card/90 text-sm text-muted-foreground">
+                Loading graph...
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-lg border border-border bg-card/90 backdrop-blur-xl">
+                <ForceGraph ref={graphRef} nodes={filteredNodes} edges={filteredEdges} onNodeClick={(id, label) => setSelectedArticle({ id, label })} />
+              </div>
+            )}
             {selectedArticle && (
               <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
                 <div className="flex items-center justify-between">
@@ -106,13 +148,11 @@ export default function GraphPage() {
                     <BookOpen className="size-5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-bold text-foreground">{selectedArticle}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">Exploring the new ECMAScript decorators standard and how it transforms the way we write TypeScript applications.</p>
-                    <span className="mt-3 inline-flex h-6 items-center rounded-md bg-accent px-2 text-[11px] font-medium text-accent-foreground">Development</span>
+                    <h3 className="font-bold text-foreground">{selectedArticle.label}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">Click on a node in the graph to view the article details.</p>
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <Link href="/blog/deep-dive" className="inline-flex h-9 cursor-pointer items-center rounded-md bg-muted px-4 text-xs font-medium text-muted-foreground">View Article</Link>
-                    <button onClick={() => {}} className="h-9 cursor-pointer rounded-md bg-primary px-4 text-xs font-medium text-primary-foreground">Open in Graph</button>
+                    <Link href={`/blog/${selectedArticle.id}`} className="inline-flex h-9 cursor-pointer items-center rounded-md bg-muted px-4 text-xs font-medium text-muted-foreground">View Article</Link>
                   </div>
                 </div>
               </div>

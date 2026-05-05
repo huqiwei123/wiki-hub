@@ -1,0 +1,141 @@
+import { publicSupabase, withTimeoutSignal } from "@/lib/supabase/public";
+
+export interface PostLinkEdge {
+  source: string;
+  target: string;
+  sourceTitle: string;
+  targetTitle: string;
+}
+
+export async function getPostLinks(slug: string): Promise<PostLinkEdge[]> {
+  const timeout = withTimeoutSignal();
+  try {
+    // Get post ID first
+    const { data: post } = await publicSupabase
+      .from("posts")
+      .select("id, title, slug")
+      .eq("slug", slug)
+      .eq("published", true)
+      .abortSignal(timeout.signal)
+      .maybeSingle();
+
+    if (!post) return [];
+
+    // Get links where this post is source or target
+    const { data: links, error } = await publicSupabase
+      .from("post_links")
+      .select("source_post_id, target_post_id, target_slug, source:source_post_id(slug, title), target:target_post_id(slug, title)")
+      .or(`source_post_id.eq.${post.id},target_post_id.eq.${post.id}`)
+      .abortSignal(timeout.signal);
+
+    if (error || !links) return [];
+
+    return links.map((l: any) => ({
+      source: l.source?.slug ?? "",
+      target: l.target?.slug ?? l.target_slug,
+      sourceTitle: l.source?.title ?? "",
+      targetTitle: l.target?.title ?? l.target_slug,
+    }));
+  } catch {
+    return [];
+  } finally {
+    timeout.clear();
+  }
+}
+
+export async function getBacklinks(slug: string): Promise<Array<{ slug: string; title: string }>> {
+  const timeout = withTimeoutSignal();
+  try {
+    const { data: post } = await publicSupabase
+      .from("posts")
+      .select("id")
+      .eq("slug", slug)
+      .eq("published", true)
+      .abortSignal(timeout.signal)
+      .maybeSingle();
+
+    if (!post) return [];
+
+    const { data: links, error } = await publicSupabase
+      .from("post_links")
+      .select("source:source_post_id(slug, title)")
+      .eq("target_post_id", post.id)
+      .abortSignal(timeout.signal);
+
+    if (error || !links) return [];
+
+    return links
+      .filter((l: any) => l.source)
+      .map((l: any) => ({ slug: l.source.slug, title: l.source.title }));
+  } catch {
+    return [];
+  } finally {
+    timeout.clear();
+  }
+}
+
+export async function getForwardLinks(slug: string): Promise<Array<{ slug: string; title: string }>> {
+  const timeout = withTimeoutSignal();
+  try {
+    const { data: post } = await publicSupabase
+      .from("posts")
+      .select("id")
+      .eq("slug", slug)
+      .eq("published", true)
+      .abortSignal(timeout.signal)
+      .maybeSingle();
+
+    if (!post) return [];
+
+    const { data: links, error } = await publicSupabase
+      .from("post_links")
+      .select("target:target_post_id(slug, title), target_slug")
+      .eq("source_post_id", post.id)
+      .abortSignal(timeout.signal);
+
+    if (error || !links) return [];
+
+    return links.map((l: any) => ({
+      slug: l.target?.slug ?? l.target_slug,
+      title: l.target?.title ?? l.target_slug,
+    }));
+  } catch {
+    return [];
+  } finally {
+    timeout.clear();
+  }
+}
+
+export async function getAllGraphData() {
+  const timeout = withTimeoutSignal();
+  try {
+    const [{ data: posts }, { data: links }] = await Promise.all([
+      publicSupabase
+        .from("posts")
+        .select("slug, title, categories(name)")
+        .eq("published", true)
+        .abortSignal(timeout.signal),
+      publicSupabase
+        .from("post_links")
+        .select("source:source_post_id(slug), target:target_post_id(slug), target_slug")
+        .abortSignal(timeout.signal),
+    ]);
+
+    const nodes = (posts ?? []).map((p: any) => ({
+      id: p.slug,
+      label: p.title,
+      group: p.categories?.name ?? "Uncategorized",
+    }));
+
+    const edges = (links ?? []).map((l: any) => ({
+      source: l.source?.slug ?? "",
+      target: l.target?.slug ?? l.target_slug,
+    }));
+
+    return { nodes, edges };
+  } catch {
+    return { nodes: [], edges: [] };
+  } finally {
+    timeout.clear();
+  }
+}

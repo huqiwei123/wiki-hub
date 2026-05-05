@@ -1,9 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
 import { publicSupabase, withTimeoutSignal } from "@/lib/supabase/public";
 import type { Category } from "@/types";
-import { unstable_cache } from "next/cache";
+import { cache } from "react";
 
-export const getAllCategories = unstable_cache(async () => {
+export const getAllCategories = cache(async () => {
   const timeout = withTimeoutSignal();
   try {
     const { data, error } = await publicSupabase
@@ -12,24 +11,15 @@ export const getAllCategories = unstable_cache(async () => {
       .order("sort_order", { ascending: true })
       .abortSignal(timeout.signal);
 
-    if (error) return [];
-    return data as (Category & { post_count: number })[];
+    if (error || !data) return [];
+
+    return (data as Array<Category & { post_count: Array<{ count: number }> }>).map((cat) => ({
+      ...cat,
+      post_count: cat.post_count?.[0]?.count ?? 0,
+    }));
   } catch {
     return [];
   } finally {
     timeout.clear();
   }
-}, ["all-categories"], { revalidate: 60 });
-
-export async function getCategoryBySlug(slug: string) {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-
-  if (error) throw error;
-  return data as Category;
-}
+});

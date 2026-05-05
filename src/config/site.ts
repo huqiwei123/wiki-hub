@@ -11,6 +11,7 @@ export const siteConfig = {
     { label: "Categories", href: "/categories" },
     { label: "Tags", href: "/tags" },
     { label: "Knowledge Graph", href: "/graph" },
+    { label: "Bookmarks", href: "/bookmarks" },
     { label: "About", href: "/about" },
   ],
 } as const;

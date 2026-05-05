@@ -1,43 +1,78 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ArrowUpRight, Hash, Tag } from "lucide-react";
 import type React from "react";
 import { PageHero, Pagination, SearchBox, SortBar } from "@/components/wikihub/ui";
 import { Container } from "@/components/layout/container";
-import { tags } from "@/lib/static-content";
+import { getAllTags } from "@/queries/tags";
 
-const SORT_OPTIONS = ["Most Popular", "A-Z", "Z-A", "Newest"];
+interface TagItem {
+  name: string;
+  slug: string;
+  color: string | null;
+  post_count: number;
+}
+
+const SORT_OPTIONS = ["Most Popular", "A-Z", "Z-A"];
 
 export default function TagsPage() {
+  const [tags, setTags] = useState<TagItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeSort, setActiveSort] = useState("Most Popular");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
+  useEffect(() => {
+    getAllTags().then((data) => {
+      setTags(data.map((t) => ({
+        name: t.name,
+        slug: t.slug,
+        color: t.color,
+        post_count: (t as any).post_count ?? 0,
+      })));
+      setLoading(false);
+    });
+  }, []);
+
   const sorted = useMemo(() => {
-    let result = [...tags];
-    if (activeSort === "A-Z") result.sort((a, b) => a[0].localeCompare(b[0]));
-    else if (activeSort === "Z-A") result.sort((a, b) => b[0].localeCompare(a[0]));
-    else result.sort((a, b) => b[1] - a[1]); // Most Popular / Newest by count
+    const result = [...tags];
+    if (activeSort === "A-Z") result.sort((a, b) => a.name.localeCompare(b.name));
+    else if (activeSort === "Z-A") result.sort((a, b) => b.name.localeCompare(a.name));
+    else result.sort((a, b) => b.post_count - a.post_count);
     return result;
-  }, [activeSort]);
+  }, [tags, activeSort]);
 
   const filtered = search
-    ? sorted.filter(([name]) => name.toLowerCase().includes(search.toLowerCase()))
+    ? sorted.filter((t) => t.name.toLowerCase().includes(search.toLowerCase()))
     : sorted;
 
   const perPage = 12;
   const totalPages = Math.ceil(filtered.length / perPage);
   const paged = filtered.slice((page - 1) * perPage, page * perPage);
 
+  const totalArticles = tags.reduce((sum, t) => sum + t.post_count, 0);
+  const popularTag = tags.length > 0 ? tags.reduce((a, b) => a.post_count > b.post_count ? a : b).name : "-";
+
+  if (loading) {
+    return (
+      <div className="w-full pb-16">
+        <PageHero title="Tags" subtitle="Explore content by specific topics and keywords" />
+        <Container>
+          <div className="mt-12 text-center text-sm text-muted-foreground">Loading tags...</div>
+        </Container>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full pb-16">
       <PageHero title="Tags" subtitle="Explore content by specific topics and keywords" />
       <Container>
         <div className="mt-7 grid gap-5 md:grid-cols-3">
-          <StatCard icon={<Tag className="size-4 text-chart-1" />} label="Total Tags" value="142" />
-          <StatCard icon={<Hash className="size-4 text-chart-2" />} label="Tagged Articles" value="328" />
-          <StatCard icon={<ArrowUpRight className="size-4 text-chart-5" />} label="Popular Tag" value="TypeScript" />
+          <StatCard icon={<Tag className="size-4 text-chart-1" />} label="Total Tags" value={String(tags.length)} />
+          <StatCard icon={<Hash className="size-4 text-chart-2" />} label="Tagged Articles" value={String(totalArticles)} />
+          <StatCard icon={<ArrowUpRight className="size-4 text-chart-5" />} label="Popular Tag" value={popularTag} />
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -48,37 +83,22 @@ export default function TagsPage() {
         </div>
 
         <section className="mt-7">
-          <h2 className="text-sm font-bold text-foreground">Popular Tags</h2>
-          <div className="mt-4 rounded-xl border border-border bg-card p-7">
-            <div className="flex flex-wrap gap-3">
-              {filtered.slice(0, 16).map(([name, count, color, bg], index) => (
-                <span
-                  key={name}
-                  className={`inline-flex items-center gap-2 rounded-lg px-3 font-medium ${index < 12 ? "h-10 text-sm" : "h-9 text-xs"}`}
-                  style={{ backgroundColor: bg, color }}
-                >
-                  {name}
-                  <span className="grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] text-white" style={{ backgroundColor: color }}>
-                    {count}
-                  </span>
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-8">
           <h2 className="text-sm font-bold text-foreground">All Tags</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
-            {paged.map(([name, count, color]) => (
-              <div key={name} className="flex h-16 items-center justify-between rounded-lg border border-border bg-card px-5 shadow-sm">
+            {paged.map((tag) => (
+              <div key={tag.slug} className="flex h-16 items-center justify-between rounded-lg border border-border bg-card px-5 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <span className="size-3 rounded-full" style={{ backgroundColor: color }} />
-                  <span className="text-sm font-medium text-foreground">{name}</span>
+                  <span className="size-3 rounded-full" style={{ backgroundColor: tag.color ?? "#64748b" }} />
+                  <span className="text-sm font-medium text-foreground">{tag.name}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{count} articles</span>
+                <span className="text-xs text-muted-foreground">{tag.post_count} articles</span>
               </div>
             ))}
+            {filtered.length === 0 && (
+              <div className="col-span-3 py-8 text-center text-sm text-muted-foreground">
+                No tags found.
+              </div>
+            )}
           </div>
         </section>
 

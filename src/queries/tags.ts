@@ -1,8 +1,8 @@
 import { publicSupabase, withTimeoutSignal } from "@/lib/supabase/public";
 import type { Tag } from "@/types";
-import { unstable_cache } from "next/cache";
+import { cache } from "react";
 
-export const getAllTags = unstable_cache(async () => {
+export const getAllTags = cache(async () => {
   const timeout = withTimeoutSignal();
   try {
     const { data, error } = await publicSupabase
@@ -11,11 +11,14 @@ export const getAllTags = unstable_cache(async () => {
       .order("name", { ascending: true })
       .abortSignal(timeout.signal);
 
-    if (error) return [];
-    return data as (Tag & { post_count: number })[];
+    if (error || !data) return [];
+    return (data as Array<Tag & { post_count: Array<{ count: number }> }>).map((tag) => ({
+      ...tag,
+      post_count: tag.post_count?.[0]?.count ?? 0,
+    }));
   } catch {
     return [];
   } finally {
     timeout.clear();
   }
-}, ["all-tags"], { revalidate: 60 });
+});

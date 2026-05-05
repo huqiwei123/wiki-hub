@@ -12,7 +12,7 @@ export const publicSupabase = createClient(
   },
 );
 
-export function withTimeoutSignal(timeoutMs = 900) {
+export function withTimeoutSignal(timeoutMs = 5000) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 

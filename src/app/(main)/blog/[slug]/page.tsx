@@ -3,7 +3,9 @@ import { MdxContent } from "@/components/mdx/mdx-content";
 import { Badge } from "@/components/ui/badge";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { CalendarDays, Clock3, UserRound } from "lucide-react";
+import { CalendarDays, Clock3, Eye, UserRound } from "lucide-react";
+import { Backlinks } from "@/components/knowledge/backlinks";
+import { getBacklinks, getForwardLinks } from "@/queries/graph";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -13,10 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
     const post = await getPostBySlug(slug);
-    return {
-      title: post.title,
-      description: post.excerpt ?? undefined,
-    };
+    return { title: post.title, description: post.excerpt ?? undefined };
   } catch {
     return { title: "Not Found" };
   }
@@ -31,6 +30,11 @@ export default async function PostPage({ params }: Props) {
   } catch {
     notFound();
   }
+
+  const [backlinks, forwardLinks] = await Promise.all([
+    getBacklinks(slug),
+    getForwardLinks(slug),
+  ]);
 
   return (
     <article className="mx-auto max-w-5xl space-y-8">
@@ -69,12 +73,18 @@ export default async function PostPage({ params }: Props) {
             <Clock3 className="size-4" />
             {post.reading_time} min read
           </span>
+          <span className="inline-flex items-center gap-2">
+            <Eye className="size-4" />
+            {post.view_count.toLocaleString()} views
+          </span>
         </div>
       </header>
 
       <div className="glass-panel rounded-3xl px-5 py-8 sm:px-8 lg:px-10">
         <MdxContent source={post.content} />
       </div>
+
+      <Backlinks slug={slug} forwardLinks={forwardLinks} backlinks={backlinks} />
     </article>
   );
 }
