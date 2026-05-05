@@ -7,15 +7,44 @@ import { Container } from "@/components/layout/container";
 
 export function SiteFooter() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "submitted">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "submitted" | "error">("idle");
+  const [message, setMessage] = useState("");
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    setStatus("submitted");
-    setEmail("");
-    setTimeout(() => setStatus("idle"), 3000);
+
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus("submitted");
+        setMessage(data.message);
+        setEmail("");
+      } else {
+        setStatus("error");
+        setMessage(data.message);
+      }
+    } catch {
+      setStatus("error");
+      setMessage("Network error. Try again.");
+    }
+    setTimeout(() => {
+      setStatus("idle");
+      setMessage("");
+    }, 4000);
   };
+
+  const buttonLabel =
+    status === "loading" ? "..." :
+    status === "submitted" ? "✓ Done" :
+    status === "error" ? "Retry" :
+    "Subscribe";
 
   return (
     <footer className="w-full border-t border-border bg-card py-12 text-foreground">
@@ -39,23 +68,48 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="grid gap-8 md:grid-cols-3">
-          <FooterColumn title="Content" links={["All Articles", "Categories", "Tags", "Knowledge Graph"]} />
-          <FooterColumn title="Resources" links={["About", "Newsletter", "RSS Feed", "Privacy Policy"]} />
+          <FooterColumn
+            title="Content"
+            links={[
+              { label: "All Articles", href: "/blog" },
+              { label: "Categories", href: "/categories" },
+              { label: "Tags", href: "/tags" },
+              { label: "Knowledge Graph", href: "/graph" },
+            ]}
+          />
+          <FooterColumn
+            title="Resources"
+            links={[
+              { label: "About", href: "/about" },
+              { label: "RSS Feed", href: "/api/rss" },
+              { label: "Bookmarks", href: "/bookmarks" },
+            ]}
+          />
           <div>
             <h3 className="text-sm font-semibold">Stay updated</h3>
             <p className="mt-3 text-xs leading-6 text-muted-foreground">
-              Subscribe to the newsletter to get new articles and knowledge graph updates.
+              Subscribe to get new articles and knowledge graph updates.
             </p>
-            <form onSubmit={handleSubscribe} className="mt-4 flex h-10 overflow-hidden rounded-lg bg-muted p-1">
+            {message && (
+              <p className={`mt-2 text-xs ${status === "error" ? "text-red-500" : "text-green-500"}`}>
+                {message}
+              </p>
+            )}
+            <form onSubmit={handleSubscribe} className="mt-3 flex h-10 overflow-hidden rounded-lg bg-muted p-1">
               <input
                 type="email"
                 className="min-w-0 flex-1 bg-transparent px-3 text-xs outline-none placeholder:text-muted-foreground"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={status === "loading"}
               />
-              <button type="submit" className="cursor-pointer rounded-md bg-primary px-4 text-xs font-medium text-primary-foreground">
-                {status === "submitted" ? "✓ Subscribed" : "Subscribe"}
+              <button
+                type="submit"
+                disabled={status === "loading"}
+                className="cursor-pointer rounded-md bg-primary px-4 text-xs font-medium text-primary-foreground disabled:opacity-50"
+              >
+                {buttonLabel}
               </button>
             </form>
           </div>
@@ -69,14 +123,14 @@ export function SiteFooter() {
   );
 }
 
-function FooterColumn({ title, links }: { title: string; links: string[] }) {
+function FooterColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div>
       <h3 className="text-sm font-semibold">{title}</h3>
       <div className="mt-4 grid gap-3 text-xs text-muted-foreground">
         {links.map((link) => (
-          <Link key={link} href="#">
-            {link}
+          <Link key={link.label} href={link.href}>
+            {link.label}
           </Link>
         ))}
       </div>

@@ -6,6 +6,13 @@ import type { Metadata } from "next";
 import { CalendarDays, Clock3, Eye, UserRound } from "lucide-react";
 import { Backlinks } from "@/components/knowledge/backlinks";
 import { getBacklinks, getForwardLinks } from "@/queries/graph";
+import { getComments, getCommentCount } from "@/queries/comments";
+import { getLikeCount } from "@/queries/likes";
+import { CommentSection } from "@/components/social/comment-section";
+import { LikeButton } from "@/components/social/like-button";
+import { ShareButtons } from "@/components/social/share-buttons";
+import { createClient } from "@/lib/supabase/server";
+import { siteConfig } from "@/config/site";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -15,7 +22,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
     const post = await getPostBySlug(slug);
-    return { title: post.title, description: post.excerpt ?? undefined };
+    return {
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      openGraph: {
+        title: post.title,
+        description: post.excerpt ?? undefined,
+        type: "article",
+        publishedTime: post.published_at ?? undefined,
+      },
+    };
   } catch {
     return { title: "Not Found" };
   }
@@ -31,10 +47,33 @@ export default async function PostPage({ params }: Props) {
     notFound();
   }
 
-  const [backlinks, forwardLinks] = await Promise.all([
+  const [backlinks, forwardLinks, comments, commentCount, likeCount] = await Promise.all([
     getBacklinks(slug),
     getForwardLinks(slug),
+    getComments(post.id),
+    getCommentCount(post.id),
+    getLikeCount("post", post.id),
   ]);
+
+  let userLiked = false;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("likes")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("target_type", "post")
+        .eq("target_id", post.id)
+        .maybeSingle();
+      userLiked = !!data;
+    }
+  } catch {
+    // User not authenticated — leave userLiked as false
+  }
+
+  const postUrl = `${siteConfig.url}/blog/${slug}`;
 
   return (
     <article className="mx-auto max-w-5xl space-y-8">
@@ -77,6 +116,10 @@ export default async function PostPage({ params }: Props) {
             <Eye className="size-4" />
             {post.view_count.toLocaleString()} views
           </span>
+          <div className="ml-auto flex items-center gap-3">
+            <LikeButton targetType="post" targetId={post.id} initialCount={likeCount} initialLiked={userLiked} slug={slug} />
+            <ShareButtons url={postUrl} title={post.title} />
+          </div>
         </div>
       </header>
 
@@ -85,6 +128,8 @@ export default async function PostPage({ params }: Props) {
       </div>
 
       <Backlinks slug={slug} forwardLinks={forwardLinks} backlinks={backlinks} />
+
+      <CommentSection postId={post.id} slug={slug} initialComments={comments} initialCount={commentCount} />
     </article>
   );
 }

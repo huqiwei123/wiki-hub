@@ -74,6 +74,14 @@ export type Bookmark = {
   posts: Post;
 };
 
+export type Like = {
+  id: string;
+  user_id: string;
+  target_type: "post" | "comment";
+  target_id: string;
+  created_at: string;
+};
+
 export type Subscription = {
   id: string;
   email: string;
