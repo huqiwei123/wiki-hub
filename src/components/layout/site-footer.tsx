@@ -1,8 +1,22 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { BookOpenText } from "lucide-react";
 import { Container } from "@/components/layout/container";
 
 export function SiteFooter() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "submitted">("idle");
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setStatus("submitted");
+    setEmail("");
+    setTimeout(() => setStatus("idle"), 3000);
+  };
+
   return (
     <footer className="w-full border-t border-border bg-card py-12 text-foreground">
       <Container className="grid gap-12 lg:grid-cols-[320px_1fr]">
@@ -32,16 +46,24 @@ export function SiteFooter() {
             <p className="mt-3 text-xs leading-6 text-muted-foreground">
               Subscribe to the newsletter to get new articles and knowledge graph updates.
             </p>
-            <div className="mt-4 flex h-10 overflow-hidden rounded-lg bg-muted p-1">
-              <input className="min-w-0 flex-1 bg-transparent px-3 text-xs outline-none placeholder:text-muted-foreground" placeholder="Email address" />
-              <button className="rounded-md bg-primary px-4 text-xs font-medium text-primary-foreground">Subscribe</button>
-            </div>
+            <form onSubmit={handleSubscribe} className="mt-4 flex h-10 overflow-hidden rounded-lg bg-muted p-1">
+              <input
+                type="email"
+                className="min-w-0 flex-1 bg-transparent px-3 text-xs outline-none placeholder:text-muted-foreground"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <button type="submit" className="cursor-pointer rounded-md bg-primary px-4 text-xs font-medium text-primary-foreground">
+                {status === "submitted" ? "✓ Subscribed" : "Subscribe"}
+              </button>
+            </form>
           </div>
         </div>
       </Container>
       <Container className="mt-12 flex border-t border-border pt-6 text-xs text-muted-foreground">
         <span>© 2026 WikiHub. All rights reserved.</span>
-        <span className="ml-auto">Made with ❤️</span>
+        <span className="ml-auto">Made with Claude Code</span>
       </Container>
     </footer>
   );

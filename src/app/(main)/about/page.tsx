@@ -11,14 +11,14 @@ const features = [
 ];
 
 const tech = [
-  ["Next.js", "#000000"],
+  ["Next.js", "#1e293b"],
   ["TypeScript", "#3178c6"],
   ["Supabase", "#3ecf8e"],
   ["Tailwind CSS", "#06b6d4"],
   ["MDX", "#f97316"],
   ["Shadcn/ui", "#6366f1"],
   ["PostgreSQL", "#165dff"],
-  ["Vercel", "#000000"],
+  ["Vercel", "#1e293b"],
 ];
 
 export default function AboutPage() {

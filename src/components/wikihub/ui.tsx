@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type React from "react";
+import { useState } from "react";
 import { ArrowRight, Calendar, Code2, Database, GitBranch, Package, Search } from "lucide-react";
 import { articles, categories } from "@/lib/static-content";
 import { Container } from "@/components/layout/container";
@@ -79,19 +82,80 @@ export function CompactCategoryCard({ item = categories[0] }: { item?: (typeof c
   );
 }
 
-export function FilterButton({ active, children }: { active?: boolean; children: React.ReactNode }) {
+export function FilterButton({ active, onClick, children }: { active?: boolean; onClick?: () => void; children: React.ReactNode }) {
   return (
-    <button className={`h-7 rounded-md px-3 text-xs font-medium ${active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+    <button
+      onClick={onClick}
+      className={`h-7 cursor-pointer rounded-md px-3 text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+    >
       {children}
     </button>
   );
 }
 
-export function SearchBox({ placeholder = "Search..." }: { placeholder?: string }) {
+export function SearchBox({ placeholder = "Search...", value = "", onChange }: { placeholder?: string; value?: string; onChange?: (value: string) => void }) {
   return (
     <div className="flex h-9 items-center gap-2 rounded-lg bg-muted px-3 text-xs text-muted-foreground">
-      <Search className="size-4" />
-      <span>{placeholder}</span>
+      <Search className="size-4 shrink-0" />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-transparent outline-none placeholder:text-muted-foreground"
+      />
+    </div>
+  );
+}
+
+export function FilterBar({ filters, activeFilter, onFilter }: { filters: string[]; activeFilter: string; onFilter: (f: string) => void }) {
+  return (
+    <div className="flex h-11 items-center gap-2 rounded-lg border border-border bg-card px-3">
+      <span className="mr-1 text-xs text-muted-foreground">Filter by:</span>
+      {filters.map((f) => (
+        <FilterButton key={f} active={activeFilter === f} onClick={() => onFilter(f)}>
+          {f}
+        </FilterButton>
+      ))}
+    </div>
+  );
+}
+
+export function SortBar({ options, activeOption, onSort }: { options: string[]; activeOption: string; onSort: (o: string) => void }) {
+  return (
+    <div className="flex h-11 items-center gap-2 rounded-lg border border-border bg-card px-3">
+      <span className="mr-1 text-xs text-muted-foreground">Sort by:</span>
+      {options.map((o) => (
+        <FilterButton key={o} active={activeOption === o} onClick={() => onSort(o)}>
+          {o}
+        </FilterButton>
+      ))}
+    </div>
+  );
+}
+
+export function Pagination({ current = 1, total = 3, onChange }: { current?: number; total?: number; onChange?: (page: number) => void }) {
+  const [page, setPage] = useState(current);
+
+  const go = (p: number) => {
+    if (p < 1 || p > total) return;
+    setPage(p);
+    onChange?.(p);
+  };
+
+  return (
+    <div className="flex justify-center gap-2">
+      <button onClick={() => go(page - 1)} className="grid size-9 cursor-pointer place-items-center rounded-lg bg-muted text-xs font-medium text-muted-foreground">‹</button>
+      {Array.from({ length: total }, (_, i) => i + 1).map((p) => (
+        <button
+          key={p}
+          onClick={() => go(p)}
+          className={`grid size-9 cursor-pointer place-items-center rounded-lg text-xs font-medium ${p === page ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+        >
+          {p}
+        </button>
+      ))}
+      <button onClick={() => go(page + 1)} className="grid size-9 cursor-pointer place-items-center rounded-lg bg-muted text-xs font-medium text-muted-foreground">›</button>
     </div>
   );
 }

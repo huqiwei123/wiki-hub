@@ -1,11 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, GitBranch, Search } from "lucide-react";
-import { ArticleCard, CompactCategoryCard, SectionHeader } from "@/components/wikihub/ui";
+import { ArrowRight, BookOpen, GitBranch } from "lucide-react";
+import { ArticleCard, CompactCategoryCard, SectionHeader, SearchBox } from "@/components/wikihub/ui";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Container } from "@/components/layout/container";
 import { articles, categories } from "@/lib/static-content";
 
 export default function HomePage() {
+  const [search, setSearch] = useState("");
+
   return (
     <div className="w-full">
       <section className="w-full border-b border-border bg-muted/75 py-12 text-center backdrop-blur-xl">
@@ -20,10 +25,8 @@ export default function HomePage() {
           <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-muted-foreground">
             A curated collection of technical insights, deep dives, and interconnected knowledge. Discover patterns across topics through bidirectional links and visual exploration.
           </p>
-          <div className="mx-auto mt-8 flex h-[52px] max-w-xl items-center rounded-xl border border-border bg-card/90 px-4 shadow-sm backdrop-blur-xl">
-            <Search className="size-4 text-muted-foreground" />
-            <span className="ml-3 flex-1 text-left text-xs text-muted-foreground">Search articles, tags, or topics...</span>
-            <kbd className="rounded bg-muted px-2 py-1 text-[11px] text-muted-foreground">Enter</kbd>
+          <div className="mx-auto mt-8 max-w-xl">
+            <SearchBox placeholder="Search articles, tags, or topics..." value={search} onChange={setSearch} />
           </div>
           <div className="mt-6 flex justify-center gap-8 text-xs text-muted-foreground">
             <span>142 Articles</span>

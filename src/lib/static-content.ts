@@ -1,6 +1,7 @@
 export const articles = [
   {
     title: "Deep Dive into TypeScript 5.0 Decorators",
+    slug: "deep-dive",
     excerpt: "Learn how the new ECMAScript decorators standard transforms TypeScript application architecture.",
     category: "TypeScript",
     date: "Mar 12, 2026",
@@ -11,6 +12,7 @@ export const articles = [
   },
   {
     title: "Building Scalable APIs with PostgreSQL and Supabase",
+    slug: "scalable-apis",
     excerpt: "A practical guide to schema design, row level security, and production-ready API patterns.",
     category: "Backend",
     date: "Mar 10, 2026",
@@ -21,6 +23,7 @@ export const articles = [
   },
   {
     title: "Server Components: The Complete Mental Model",
+    slug: "server-components",
     excerpt: "Understand how React Server Components reshape routing, data loading, and rendering.",
     category: "React",
     date: "Mar 8, 2026",
@@ -32,31 +35,31 @@ export const articles = [
 ];
 
 export const categories = [
-  { name: "Development", count: 32, color: "#2563eb", bg: "#eff6ff", tags: ["TypeScript", "Python", "Rust", "Go"] },
-  { name: "Infrastructure", count: 24, color: "#059669", bg: "#ecfdf5", tags: ["AWS", "Docker", "Kubernetes", "PostgreSQL"] },
-  { name: "Frontend Development", count: 28, color: "#dc2626", bg: "#fef2f2", tags: ["React", "Next.js", "CSS", "Accessibility"] },
-  { name: "Artificial Intelligence", count: 15, color: "#f97316", bg: "#fff7ed", tags: ["LLM", "LangChain", "PyTorch", "Prompt Engineering"] },
-  { name: "Security", count: 18, color: "#7c3aed", bg: "#faf5ff", tags: ["Cybersecurity", "Encryption", "OWASP", "Privacy"] },
-  { name: "Mobile Development", count: 10, color: "#16a34a", bg: "#f0fdf4", tags: ["iOS", "Android", "Flutter", "React Native"] },
+  { name: "Development", count: 32, color: "#2563eb", bg: "#2563eb18", tags: ["TypeScript", "Python", "Rust", "Go"] },
+  { name: "Infrastructure", count: 24, color: "#059669", bg: "#05966918", tags: ["AWS", "Docker", "Kubernetes", "PostgreSQL"] },
+  { name: "Frontend Development", count: 28, color: "#dc2626", bg: "#dc262618", tags: ["React", "Next.js", "CSS", "Accessibility"] },
+  { name: "Artificial Intelligence", count: 15, color: "#f97316", bg: "#f9731618", tags: ["LLM", "LangChain", "PyTorch", "Prompt Engineering"] },
+  { name: "Security", count: 18, color: "#7c3aed", bg: "#7c3aed18", tags: ["Cybersecurity", "Encryption", "OWASP", "Privacy"] },
+  { name: "Mobile Development", count: 10, color: "#16a34a", bg: "#16a34a18", tags: ["iOS", "Android", "Flutter", "React Native"] },
 ];
 
 export const tags = [
-  ["TypeScript", 48, "#2563eb", "#eff6ff"],
-  ["React", 41, "#059669", "#ecfdf5"],
-  ["Next.js", 36, "#dc2626", "#fef2f2"],
-  ["LLM", 29, "#f97316", "#fff7ed"],
-  ["PostgreSQL", 23, "#7c3aed", "#faf5ff"],
-  ["Python", 31, "#16a34a", "#f0fdf4"],
-  ["AWS", 19, "#ca8a04", "#fefce8"],
-  ["Docker", 18, "#0891b2", "#ecfeff"],
-  ["Kubernetes", 15, "#c026d3", "#fdf2f8"],
-  ["Rust", 12, "#475569", "#f8fafc"],
-  ["Vue", 11, "#0369a1", "#f0f9ff"],
-  ["CSS", 20, "#e11d48", "#fff1f2"],
-  ["LangChain", 8, "#111827", "#f1f5f9"],
-  ["Go", 10, "#111827", "#f1f5f9"],
-  ["Prompt Engineering", 9, "#111827", "#f1f5f9"],
-  ["Flutter", 6, "#111827", "#f1f5f9"],
+  ["TypeScript", 48, "#2563eb", "#2563eb18"],
+  ["React", 41, "#059669", "#05966918"],
+  ["Next.js", 36, "#dc2626", "#dc262618"],
+  ["LLM", 29, "#f97316", "#f9731618"],
+  ["PostgreSQL", 23, "#7c3aed", "#7c3aed18"],
+  ["Python", 31, "#16a34a", "#16a34a18"],
+  ["AWS", 19, "#ca8a04", "#ca8a0418"],
+  ["Docker", 18, "#0891b2", "#0891b218"],
+  ["Kubernetes", 15, "#c026d3", "#c026d318"],
+  ["Rust", 12, "#ea580c", "#ea580c18"],
+  ["Vue", 11, "#0369a1", "#0369a118"],
+  ["CSS", 20, "#e11d48", "#e11d4818"],
+  ["LangChain", 8, "#6366f1", "#6366f118"],
+  ["Go", 10, "#06b6d4", "#06b6d418"],
+  ["Prompt Engineering", 9, "#f59e0b", "#f59e0b18"],
+  ["Flutter", 6, "#8b5cf6", "#8b5cf618"],
 ] as const;
 
 export const graphStats = [

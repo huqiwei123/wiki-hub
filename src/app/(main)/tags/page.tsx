@@ -1,76 +1,92 @@
-import { ArrowUpRight, Hash, Search, SlidersHorizontal, Tag } from "lucide-react";
+"use client";
+
+import { useState, useMemo } from "react";
+import { ArrowUpRight, Hash, Tag } from "lucide-react";
 import type React from "react";
-import { FilterButton, PageHero } from "@/components/wikihub/ui";
+import { PageHero, Pagination, SearchBox, SortBar } from "@/components/wikihub/ui";
 import { Container } from "@/components/layout/container";
 import { tags } from "@/lib/static-content";
 
+const SORT_OPTIONS = ["Most Popular", "A-Z", "Z-A", "Newest"];
+
 export default function TagsPage() {
+  const [activeSort, setActiveSort] = useState("Most Popular");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const sorted = useMemo(() => {
+    let result = [...tags];
+    if (activeSort === "A-Z") result.sort((a, b) => a[0].localeCompare(b[0]));
+    else if (activeSort === "Z-A") result.sort((a, b) => b[0].localeCompare(a[0]));
+    else result.sort((a, b) => b[1] - a[1]); // Most Popular / Newest by count
+    return result;
+  }, [activeSort]);
+
+  const filtered = search
+    ? sorted.filter(([name]) => name.toLowerCase().includes(search.toLowerCase()))
+    : sorted;
+
+  const perPage = 12;
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const paged = filtered.slice((page - 1) * perPage, page * perPage);
+
   return (
     <div className="w-full pb-16">
       <PageHero title="Tags" subtitle="Explore content by specific topics and keywords" />
       <Container>
-
-      <div className="mt-7 grid gap-5 md:grid-cols-3">
-        <StatCard icon={<Tag className="size-4 text-blue-600" />} label="Total Tags" value="142" />
-        <StatCard icon={<Hash className="size-4 text-emerald-600" />} label="Tagged Articles" value="328" />
-        <StatCard icon={<ArrowUpRight className="size-4 text-red-600" />} label="Popular Tag" value="TypeScript" />
-      </div>
-
-      <div className="mt-6 flex h-11 items-center gap-2 rounded-lg border border-border bg-card px-3">
-        <SlidersHorizontal className="size-4 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">Sort by:</span>
-        <FilterButton active>Most Popular</FilterButton>
-        <FilterButton>A-Z</FilterButton>
-        <FilterButton>Z-A</FilterButton>
-        <FilterButton>Newest</FilterButton>
-        <div className="ml-auto hidden h-8 items-center gap-2 rounded-lg bg-muted px-3 text-xs text-muted-foreground sm:flex">
-          <Search className="size-4" />
-          Search tags...
+        <div className="mt-7 grid gap-5 md:grid-cols-3">
+          <StatCard icon={<Tag className="size-4 text-chart-1" />} label="Total Tags" value="142" />
+          <StatCard icon={<Hash className="size-4 text-chart-2" />} label="Tagged Articles" value="328" />
+          <StatCard icon={<ArrowUpRight className="size-4 text-chart-5" />} label="Popular Tag" value="TypeScript" />
         </div>
-      </div>
 
-      <section className="mt-7">
-        <h2 className="text-sm font-bold text-foreground">Popular Tags</h2>
-        <div className="mt-4 rounded-xl border border-border bg-card p-7">
-          <div className="flex flex-wrap gap-3">
-            {tags.map(([name, count, color, bg], index) => (
-              <span
-                key={name}
-                className={`inline-flex items-center gap-2 rounded-lg px-3 font-medium ${index < 12 ? "h-10 text-sm" : "h-9 text-xs"}`}
-                style={{ backgroundColor: bg, color }}
-              >
-                {name}
-                <span className="grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] text-white" style={{ backgroundColor: color }}>
-                  {count}
-                </span>
-              </span>
-            ))}
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <SortBar options={SORT_OPTIONS} activeOption={activeSort} onSort={setActiveSort} />
+          <div className="ml-auto w-48">
+            <SearchBox placeholder="Search tags..." value={search} onChange={setSearch} />
           </div>
         </div>
-      </section>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-bold text-foreground">All Tags</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          {tags.slice(0, 12).map(([name, count, color]) => (
-            <div key={name} className="flex h-16 items-center justify-between rounded-lg border border-border bg-card px-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <span className="size-3 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-sm font-medium text-foreground">{name}</span>
-              </div>
-              <span className="text-xs text-muted-foreground">{count} articles</span>
+        <section className="mt-7">
+          <h2 className="text-sm font-bold text-foreground">Popular Tags</h2>
+          <div className="mt-4 rounded-xl border border-border bg-card p-7">
+            <div className="flex flex-wrap gap-3">
+              {filtered.slice(0, 16).map(([name, count, color, bg], index) => (
+                <span
+                  key={name}
+                  className={`inline-flex items-center gap-2 rounded-lg px-3 font-medium ${index < 12 ? "h-10 text-sm" : "h-9 text-xs"}`}
+                  style={{ backgroundColor: bg, color }}
+                >
+                  {name}
+                  <span className="grid min-w-5 place-items-center rounded-full px-1.5 text-[10px] text-white" style={{ backgroundColor: color }}>
+                    {count}
+                  </span>
+                </span>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      <div className="mt-10 flex justify-center gap-2">
-        {["‹", "1", "2", "3", "›"].map((item) => (
-          <button key={item} className={`grid size-9 place-items-center rounded-lg text-xs font-medium ${item === "1" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-            {item}
-          </button>
-        ))}
-      </div>
+        <section className="mt-8">
+          <h2 className="text-sm font-bold text-foreground">All Tags</h2>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            {paged.map(([name, count, color]) => (
+              <div key={name} className="flex h-16 items-center justify-between rounded-lg border border-border bg-card px-5 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <span className="size-3 rounded-full" style={{ backgroundColor: color }} />
+                  <span className="text-sm font-medium text-foreground">{name}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{count} articles</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {totalPages > 1 && (
+          <div className="mt-10">
+            <Pagination current={page} total={totalPages} onChange={setPage} />
+          </div>
+        )}
       </Container>
     </div>
   );
