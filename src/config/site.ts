@@ -9,8 +9,7 @@ export const siteConfig = {
   nav: [
     { label: "Articles", href: "/blog" },
     { label: "Categories", href: "/categories" },
-    { label: "Tags", href: "/tags" },
-    { label: "Knowledge Graph", href: "/graph" },
+    // { label: "Knowledge Graph", href: "/graph" },
     { label: "Bookmarks", href: "/bookmarks" },
     { label: "About", href: "/about" },
   ],

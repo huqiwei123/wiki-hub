@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useEffect, useState } from "react";
 import { Pencil, Trash2, Check, X, Plus } from "lucide-react";
 import { getAllCategories } from "@/queries/categories";
@@ -15,6 +17,14 @@ interface CategoryItem {
   post_count: number;
 }
 
+type CategoryQueryItem = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  post_count?: number;
+};
+
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -26,7 +36,7 @@ export default function AdminCategoriesPage() {
 
   const load = async () => {
     const data = await getAllCategories();
-    setCategories(data.map((c: any) => ({
+    setCategories((data as CategoryQueryItem[]).map((c) => ({
       id: c.id, name: c.name, slug: c.slug,
       description: c.description ?? null, post_count: c.post_count ?? 0,
     })));

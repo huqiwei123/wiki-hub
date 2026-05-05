@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 
 function generateSlug(name: string): string {
   return name

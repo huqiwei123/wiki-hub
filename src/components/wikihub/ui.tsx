@@ -8,10 +8,19 @@ import { Container } from "@/components/layout/container";
 
 export function PageHero({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <section className="w-full border-b border-border bg-muted/75 py-12 text-center backdrop-blur-xl">
-      <Container>
-        <h1 className="text-4xl font-extrabold tracking-tight text-foreground md:text-5xl">{title}</h1>
-        <p className="mx-auto mt-4 max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
+    <section className="relative w-full overflow-hidden border-b border-border bg-[#eaf4ff] py-12 text-center text-slate-950 dark:bg-slate-950 dark:text-white">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[url('/generated/page-hero-programming-light.webp')] bg-cover bg-center opacity-100 dark:bg-[url('/generated/page-hero-programming-dark.webp')]"
+      />
+      <div aria-hidden="true" className="absolute inset-0 bg-white/24 dark:bg-slate-950/38" />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.10),rgba(239,246,255,0.42)_72%)] dark:bg-[radial-gradient(circle_at_center,rgba(15,23,42,0.06),rgba(15,23,42,0.48)_72%)]"
+      />
+      <Container className="relative z-10">
+        <h1 className="text-4xl font-extrabold tracking-tight text-slate-950 md:text-5xl dark:text-white">{title}</h1>
+        <p className="mx-auto mt-4 max-w-2xl text-sm text-slate-700 dark:text-slate-300">{subtitle}</p>
       </Container>
     </section>
   );
@@ -47,25 +56,28 @@ export function ArticleCard({
     : "from-orange-500 to-red-500";
 
   return (
-    <Link href={`/blog/${article.slug}`} className="overflow-hidden rounded-lg border border-border bg-card/90 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
+    <Link
+      href={`/blog/${article.slug}`}
+      className="group glass-panel flex h-full flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_100px_rgba(17,24,39,0.18)] dark:hover:shadow-[0_30px_100px_rgba(0,0,0,0.38)]"
+    >
       <div className={`relative grid h-[200px] overflow-hidden place-items-center bg-gradient-to-br ${gradient} text-white`}>
         {article.cover_image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={article.cover_image}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover transition duration-500 hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
-          <Code2 className="size-8 opacity-80" />
+          <Code2 className="size-8 opacity-80 transition-transform duration-700 group-hover:scale-110" />
         )}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/10 to-white/0" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-white/0 transition-opacity duration-300 group-hover:opacity-80" />
       </div>
       <div className="p-5">
         {article.category && (
           <span className="inline-flex h-6 items-center rounded-md bg-accent/15 px-2 text-[11px] font-medium text-accent">{article.category}</span>
         )}
-        <h3 className="mt-3 line-clamp-2 text-base font-bold leading-snug text-foreground">{article.title}</h3>
+        <h3 className="mt-3 line-clamp-2 text-base font-bold leading-snug text-foreground transition-colors group-hover:text-primary">{article.title}</h3>
         {article.excerpt && (
           <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{article.excerpt}</p>
         )}
@@ -94,14 +106,17 @@ export function CompactCategoryCard({
   };
 }) {
   return (
-    <Link href={`/categories?category=${item.slug}`} className="rounded-lg border border-border bg-card/90 p-5 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
+    <Link
+      href={`/categories?category=${item.slug}`}
+      className="group glass-panel rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_100px_rgba(17,24,39,0.16)] dark:hover:shadow-[0_30px_100px_rgba(0,0,0,0.34)]"
+    >
       <div className="flex items-center justify-between">
-        <span className="grid size-11 place-items-center rounded-lg bg-accent/15 text-accent">
+        <span className="grid size-11 place-items-center rounded-lg bg-accent/15 text-accent transition-transform duration-300 group-hover:scale-105">
           <Code2 className="size-5" />
         </span>
-        <ArrowRight className="size-4 text-muted-foreground" />
+        <ArrowRight className="size-4 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1 group-hover:text-primary" />
       </div>
-      <h3 className="mt-5 font-bold text-foreground">{item.name}</h3>
+      <h3 className="mt-5 font-bold text-foreground transition-colors group-hover:text-primary">{item.name}</h3>
       {item.description && (
         <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{item.description}</p>
       )}

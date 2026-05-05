@@ -33,25 +33,25 @@ export default async function CategoriesPage() {
                 <Link
                   key={cat.slug}
                   href={`/blog?category=${cat.slug}`}
-                  className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  className="group glass-panel relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_100px_rgba(17,24,39,0.16)] dark:hover:shadow-[0_30px_100px_rgba(0,0,0,0.34)]"
                   style={{ backgroundImage: categoryGradient(i) }}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       <span
-                        className="grid size-[52px] place-items-center rounded-xl text-lg font-bold"
+                        className="grid size-[52px] place-items-center rounded-xl text-lg font-bold transition-transform duration-300 group-hover:scale-105"
                         style={{ backgroundColor: accent.bg, color: accent.text }}
                       >
                         {cat.name[0]}
                       </span>
                       <div>
-                        <h2 className="font-bold text-foreground">{cat.name}</h2>
+                        <h2 className="font-bold text-foreground transition-colors group-hover:text-primary">{cat.name}</h2>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {cat.post_count ?? 0} Articles
                         </p>
                       </div>
                     </div>
-                    <ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5" />
+                    <ArrowRight className="size-4 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1 group-hover:text-primary" />
                   </div>
                   {cat.description && (
                     <p className="mt-5 text-sm leading-6 text-muted-foreground">{cat.description}</p>

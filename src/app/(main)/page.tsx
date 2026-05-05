@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, GitBranch } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ArticleCard, CompactCategoryCard, SectionHeader } from "@/components/wikihub/ui";
-import { SiteFooter } from "@/components/layout/site-footer";
 import { Container } from "@/components/layout/container";
 import { getRecentPosts } from "@/queries/posts";
 import { getAllCategories } from "@/queries/categories";
@@ -18,19 +17,31 @@ export default async function HomePage() {
 
   return (
     <div className="w-full">
-      <section className="w-full border-b border-border bg-muted/75 py-12 text-center backdrop-blur-xl">
-        <Container>
+      <section className="relative w-full overflow-hidden border-b border-border bg-[#edf6ff] py-16 text-center dark:bg-slate-950">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[url('/generated/home-hero-light.webp')] bg-cover bg-center opacity-100 dark:bg-[url('/generated/home-hero-dark.webp')]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.14),rgba(239,246,255,0.42))] dark:bg-[linear-gradient(to_bottom,rgba(15,23,42,0.22),rgba(15,23,42,0.55))]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.28),rgba(255,255,255,0.06)_42%,rgba(255,255,255,0.20)_100%)] dark:bg-[radial-gradient(circle_at_center,rgba(15,23,42,0.16),rgba(15,23,42,0.18)_42%,rgba(15,23,42,0.52)_100%)]"
+        />
+        <Container className="relative z-10">
           <div className="mx-auto max-w-4xl">
-            <div className="mx-auto inline-flex h-7 items-center rounded-full bg-accent/15 px-3 text-xs font-medium text-accent">
+            <div className="mx-auto inline-flex h-7 items-center rounded-full border border-white/50 bg-white/45 px-3 text-xs font-medium text-accent shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/10 dark:text-sky-300">
               Personal Knowledge Base
             </div>
-            <h1 className="mx-auto mt-5 max-w-2xl text-5xl font-extrabold tracking-tight text-foreground">
+            <h1 className="mx-auto mt-5 max-w-2xl text-5xl font-extrabold tracking-tight text-slate-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.45)] dark:text-white dark:drop-shadow-[0_10px_40px_rgba(59,130,246,0.18)]">
               Explore, Learn &amp; Connect Ideas
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-muted-foreground">
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-slate-700 dark:text-slate-300">
               A curated collection of technical insights, deep dives, and interconnected knowledge. Discover patterns across topics through bidirectional links and visual exploration.
             </p>
-            <div className="mt-6 flex justify-center gap-8 text-xs text-muted-foreground">
+            <div className="mt-6 flex justify-center gap-8 text-xs text-slate-700 dark:text-slate-300">
               <span>{totalPosts} Articles</span>
               <span>{totalTags} Tags</span>
               <span>{totalLinks} Links</span>
@@ -76,6 +87,7 @@ export default async function HomePage() {
         </div>
       </Container>
 
+{/* Knowledge Graph section — disabled
       <Container className="pb-12">
         <SectionHeader
           title="Explore the Knowledge Graph"
@@ -126,8 +138,7 @@ export default async function HomePage() {
           </div>
         </div>
       </Container>
-
-      <SiteFooter />
+      */}
     </div>
   );
 }

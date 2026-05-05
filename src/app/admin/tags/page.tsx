@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useEffect, useState } from "react";
 import { Pencil, Trash2, Check, X, Plus } from "lucide-react";
 import { getAllTags } from "@/queries/tags";
@@ -15,6 +17,15 @@ interface TagItem {
   description: string | null;
   post_count: number;
 }
+
+type TagQueryItem = {
+  id: string;
+  name: string;
+  slug: string;
+  color: string | null;
+  description: string | null;
+  post_count?: number;
+};
 
 const PRESET_COLORS = [
   "#2563eb", "#059669", "#dc2626", "#d97706",
@@ -33,7 +44,7 @@ export default function AdminTagsPage() {
 
   const load = async () => {
     const data = await getAllTags();
-    setTags(data.map((t: any) => ({
+    setTags((data as TagQueryItem[]).map((t) => ({
       id: t.id, name: t.name, slug: t.slug,
       color: t.color ?? null, description: t.description ?? null,
       post_count: t.post_count ?? 0,

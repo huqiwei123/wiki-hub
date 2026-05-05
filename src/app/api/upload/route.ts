@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const config = {
-  api: {
-    bodySizeLimit: "5mb",
-  },
-};
-
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
