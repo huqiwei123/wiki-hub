@@ -1,20 +1,12 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { PageHero } from "@/components/wikihub/ui";
+import { CategoryIconBadge, PageHero } from "@/components/wikihub/ui";
 import { Container } from "@/components/layout/container";
+import { getCategoryStyle } from "@/lib/category-style";
 import { getAllCategories } from "@/queries/categories";
 
-const ACCENT_COLORS = [
-  { bg: "#2563eb18", text: "#2563eb" },
-  { bg: "#05966918", text: "#059669" },
-  { bg: "#7c3aed18", text: "#7c3aed" },
-  { bg: "#d9770618", text: "#d97706" },
-  { bg: "#db277718", text: "#db2777" },
-  { bg: "#0284c718", text: "#0284c7" },
-];
-
 function categoryGradient(i: number) {
-  const c = ACCENT_COLORS[i % ACCENT_COLORS.length];
+  const c = getCategoryStyle("", i);
   return `linear-gradient(135deg, ${c.bg}, transparent)` as const;
 }
 
@@ -28,7 +20,6 @@ export default async function CategoriesPage() {
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           {categories.length > 0 ? (
             categories.map((cat, i) => {
-              const accent = ACCENT_COLORS[i % ACCENT_COLORS.length];
               return (
                 <Link
                   key={cat.slug}
@@ -38,12 +29,7 @@ export default async function CategoriesPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
-                      <span
-                        className="grid size-[52px] place-items-center rounded-xl text-lg font-bold transition-transform duration-300 group-hover:scale-105"
-                        style={{ backgroundColor: accent.bg, color: accent.text }}
-                      >
-                        {cat.name[0]}
-                      </span>
+                      <CategoryIconBadge slug={cat.slug} index={i} className="size-[56px] rounded-2xl" />
                       <div>
                         <h2 className="font-bold text-foreground transition-colors group-hover:text-primary">{cat.name}</h2>
                         <p className="mt-1 text-xs text-muted-foreground">

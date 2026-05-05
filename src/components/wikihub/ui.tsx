@@ -3,8 +3,54 @@
 import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Calendar, Code2, GitBranch, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  Code2,
+  GitBranch,
+  Search,
+} from "lucide-react";
 import { Container } from "@/components/layout/container";
+import { getCategoryStyle } from "@/lib/category-style";
+
+export function CategoryIconBadge({
+  slug,
+  index = 0,
+  className = "size-11 rounded-xl",
+}: {
+  slug: string;
+  index?: number;
+  className?: string;
+}) {
+  const style = getCategoryStyle(slug, index);
+  const Icon = style.icon;
+
+  return (
+    <span
+      className={`relative grid place-items-center overflow-hidden border border-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_12px_28px_rgba(15,23,42,0.08)] backdrop-blur-2xl transition-transform duration-300 group-hover:scale-105 dark:border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_16px_36px_rgba(0,0,0,0.26)] ${className}`}
+      style={{
+        background: `linear-gradient(145deg, color-mix(in srgb, ${style.text} 8%, rgba(255,255,255,0.72)), color-mix(in srgb, ${style.text} 18%, rgba(255,255,255,0.22)))`,
+        color: style.text,
+      }}
+    >
+      <span
+        aria-hidden="true"
+        className="absolute inset-px rounded-[inherit] bg-white/20 dark:bg-white/[0.035]"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-2 top-1 h-px rounded-full bg-white/55 opacity-70 dark:bg-white/25"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute -bottom-4 -right-4 size-10 rounded-full opacity-35 blur-xl"
+        style={{ backgroundColor: style.text }}
+      />
+      <Icon className="relative z-10 size-[52%] drop-shadow-sm" strokeWidth={2.25} />
+    </span>
+  );
+}
 
 export function PageHero({ title, subtitle }: { title: string; subtitle: string }) {
   return (
@@ -97,6 +143,7 @@ export function ArticleCard({
 
 export function CompactCategoryCard({
   item,
+  index = 0,
 }: {
   item: {
     name: string;
@@ -104,6 +151,7 @@ export function CompactCategoryCard({
     description?: string | null;
     post_count?: number;
   };
+  index?: number;
 }) {
   return (
     <Link
@@ -111,9 +159,7 @@ export function CompactCategoryCard({
       className="group glass-panel rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_100px_rgba(17,24,39,0.16)] dark:hover:shadow-[0_30px_100px_rgba(0,0,0,0.34)]"
     >
       <div className="flex items-center justify-between">
-        <span className="grid size-11 place-items-center rounded-lg bg-accent/15 text-accent transition-transform duration-300 group-hover:scale-105">
-          <Code2 className="size-5" />
-        </span>
+        <CategoryIconBadge slug={item.slug} index={index} className="size-[56px] rounded-2xl" />
         <ArrowRight className="size-4 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1 group-hover:text-primary" />
       </div>
       <h3 className="mt-5 font-bold text-foreground transition-colors group-hover:text-primary">{item.name}</h3>

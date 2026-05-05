@@ -1,4 +1,5 @@
 import { publicSupabase, withTimeoutSignal } from "@/lib/supabase/public";
+import { cache } from "react";
 
 export interface PostLinkEdge {
   source: string;
@@ -67,23 +68,13 @@ export async function getPostLinks(slug: string): Promise<PostLinkEdge[]> {
   }
 }
 
-export async function getBacklinks(slug: string): Promise<Array<{ slug: string; title: string }>> {
+export const getBacklinks = cache(async (postId: string): Promise<Array<{ slug: string; title: string }>> => {
   const timeout = withTimeoutSignal();
   try {
-    const { data: post } = await publicSupabase
-      .from("posts")
-      .select("id")
-      .eq("slug", slug)
-      .eq("published", true)
-      .abortSignal(timeout.signal)
-      .maybeSingle();
-
-    if (!post) return [];
-
     const { data: links, error } = await publicSupabase
       .from("post_links")
       .select("source:source_post_id(slug, title)")
-      .eq("target_post_id", post.id)
+      .eq("target_post_id", postId)
       .abortSignal(timeout.signal);
 
     if (error || !links) return [];
@@ -96,25 +87,15 @@ export async function getBacklinks(slug: string): Promise<Array<{ slug: string; 
   } finally {
     timeout.clear();
   }
-}
+});
 
-export async function getForwardLinks(slug: string): Promise<Array<{ slug: string; title: string }>> {
+export const getForwardLinks = cache(async (postId: string): Promise<Array<{ slug: string; title: string }>> => {
   const timeout = withTimeoutSignal();
   try {
-    const { data: post } = await publicSupabase
-      .from("posts")
-      .select("id")
-      .eq("slug", slug)
-      .eq("published", true)
-      .abortSignal(timeout.signal)
-      .maybeSingle();
-
-    if (!post) return [];
-
     const { data: links, error } = await publicSupabase
       .from("post_links")
       .select("target:target_post_id(slug, title), target_slug")
-      .eq("source_post_id", post.id)
+      .eq("source_post_id", postId)
       .abortSignal(timeout.signal);
 
     if (error || !links) return [];
@@ -128,7 +109,7 @@ export async function getForwardLinks(slug: string): Promise<Array<{ slug: strin
   } finally {
     timeout.clear();
   }
-}
+});
 
 export async function getAllGraphData() {
   const timeout = withTimeoutSignal();

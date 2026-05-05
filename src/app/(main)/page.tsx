@@ -81,8 +81,8 @@ export default async function HomePage() {
       <Container className="pb-10">
         <SectionHeader title="Browse by Category" subtitle="Explore content organized by technical domain" />
         <div className="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {categories.slice(0, 4).map((cat) => (
-            <CompactCategoryCard key={cat.slug} item={cat} />
+          {categories.slice(0, 4).map((cat, index) => (
+            <CompactCategoryCard key={cat.slug} item={cat} index={index} />
           ))}
         </div>
       </Container>

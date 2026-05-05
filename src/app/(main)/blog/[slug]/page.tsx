@@ -1,23 +1,54 @@
+import { Suspense } from "react";
 import { getPostBySlug } from "@/queries/posts";
 import { MdxContent } from "@/components/mdx/mdx-content";
 import { Badge } from "@/components/ui/badge";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import type { Metadata } from "next";
-import { CalendarDays, Clock3, Eye, UserRound } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock3, Eye, UserRound } from "lucide-react";
 import { Backlinks } from "@/components/knowledge/backlinks";
 import { getBacklinks, getForwardLinks } from "@/queries/graph";
 import { getComments, getCommentCount } from "@/queries/comments";
 import { getLikeCount } from "@/queries/likes";
-import dynamic from "next/dynamic";
 import { LikeButton } from "@/components/social/like-button";
-
-const CommentSection = dynamic(
-  () => import("@/components/social/comment-section").then((mod) => ({ default: mod.CommentSection })),
-  { loading: () => <div className="glass-panel rounded-3xl px-5 py-8 text-center text-sm text-muted-foreground">Loading comments...</div> }
-);
 import { ShareButtons } from "@/components/social/share-buttons";
+import { CommentSection } from "@/components/social/comment-section";
 import { createClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/config/site";
+
+async function checkUserLiked(postId: string): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { data } = await supabase
+      .from("likes")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("target_type", "post")
+      .eq("target_id", postId)
+      .maybeSingle();
+    return !!data;
+  } catch {
+    return false;
+  }
+}
+
+async function BacklinksAsync({ postId }: { postId: string }) {
+  const [backlinks, forwardLinks] = await Promise.all([
+    getBacklinks(postId),
+    getForwardLinks(postId),
+  ]);
+  return <Backlinks forwardLinks={forwardLinks} backlinks={backlinks} />;
+}
+
+async function CommentsAsync({ postId, slug }: { postId: string; slug: string }) {
+  const [comments, count] = await Promise.all([
+    getComments(postId),
+    getCommentCount(postId),
+  ]);
+  return <CommentSection postId={postId} slug={slug} initialComments={comments} initialCount={count} />;
+}
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -52,36 +83,25 @@ export default async function PostPage({ params }: Props) {
     notFound();
   }
 
-  const [backlinks, forwardLinks, comments, commentCount, likeCount] = await Promise.all([
-    getBacklinks(slug),
-    getForwardLinks(slug),
-    getComments(post.id),
-    getCommentCount(post.id),
+  const [likeCount, userLiked] = await Promise.all([
     getLikeCount("post", post.id),
+    checkUserLiked(post.id),
   ]);
-
-  let userLiked = false;
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase
-        .from("likes")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("target_type", "post")
-        .eq("target_id", post.id)
-        .maybeSingle();
-      userLiked = !!data;
-    }
-  } catch {
-    // User not authenticated — leave userLiked as false
-  }
 
   const postUrl = `${siteConfig.url}/blog/${slug}`;
 
   return (
-    <article className="mx-auto max-w-5xl space-y-8">
+    <article className="mx-auto max-w-5xl space-y-8 pt-8 pb-16 sm:pt-10">
+      <nav aria-label="Breadcrumb" className="reveal-up">
+        <Link
+          href="/blog"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-card/70 px-4 text-sm font-medium text-muted-foreground shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:text-foreground hover:shadow-md"
+        >
+          <ArrowLeft className="size-4" />
+          Back to Articles
+        </Link>
+      </nav>
+
       <header className="glass-panel reveal-up overflow-hidden rounded-3xl">
         <div className={`relative min-h-72 p-6 sm:p-8 lg:p-10 ${post.cover_image ? "text-white" : ""}`}>
           {post.cover_image ? (
@@ -141,9 +161,29 @@ export default async function PostPage({ params }: Props) {
         <MdxContent source={post.content} />
       </div>
 
-      <Backlinks slug={slug} forwardLinks={forwardLinks} backlinks={backlinks} />
+      <Suspense fallback={
+        <div className="rounded-xl border border-border bg-card p-6 animate-pulse">
+          <div className="h-4 w-32 rounded bg-muted" />
+          <div className="mt-4 flex gap-2">
+            <div className="h-7 w-24 rounded-md bg-muted" />
+            <div className="h-7 w-32 rounded-md bg-muted" />
+          </div>
+        </div>
+      }>
+        <BacklinksAsync postId={post.id} />
+      </Suspense>
 
-      <CommentSection postId={post.id} slug={slug} initialComments={comments} initialCount={commentCount} />
+      <Suspense fallback={
+        <div className="glass-panel rounded-3xl p-6 sm:p-8 lg:p-10 animate-pulse">
+          <div className="h-5 w-28 rounded bg-muted" />
+          <div className="mt-6 space-y-4">
+            <div className="h-20 rounded-xl bg-muted" />
+            <div className="h-20 rounded-xl bg-muted" />
+          </div>
+        </div>
+      }>
+        <CommentsAsync postId={post.id} slug={slug} />
+      </Suspense>
     </article>
   );
 }

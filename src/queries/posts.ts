@@ -57,19 +57,23 @@ export const getPublishedPosts = cache(
   }
 );
 
-export async function getPostBySlug(slug: string) {
-  const supabase = await createClient();
+export const getPostBySlug = cache(async (slug: string) => {
+  const timeout = withTimeoutSignal();
+  try {
+    const { data, error } = await publicSupabase
+      .from("posts")
+      .select("*, categories(*), tags:post_tags(tag:tags(*)), profiles!posts_author_id_fkey(username, display_name, avatar_url)")
+      .eq("slug", slug)
+      .eq("published", true)
+      .abortSignal(timeout.signal)
+      .single();
 
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*, categories(*), tags:post_tags(tag:tags(*)), profiles!posts_author_id_fkey(username, display_name, avatar_url)")
-    .eq("slug", slug)
-    .eq("published", true)
-    .single();
-
-  if (error) throw error;
-  return flattenPostTags(data) as unknown as Post;
-}
+    if (error) throw error;
+    return flattenPostTags(data) as unknown as Post;
+  } finally {
+    timeout.clear();
+  }
+});
 
 export async function getAllPosts(page = 1, pageSize = 20) {
   try {

@@ -26,9 +26,9 @@ export function BlogPagination({ current, total }: BlogPaginationProps) {
   return (
     <div className="flex justify-center gap-2">
       {current > 1 ? (
-        <Link href={buildHref(current - 1)} className="grid size-9 cursor-pointer place-items-center rounded-lg bg-muted text-xs font-medium text-muted-foreground">‹</Link>
+        <Link href={buildHref(current - 1)} className="grid size-9 cursor-pointer place-items-center rounded-lg bg-muted text-xs font-medium text-muted-foreground transition hover:bg-muted/80">‹</Link>
       ) : (
-        <span className="grid size-9 place-items-center rounded-lg text-xs text-muted-foreground/40">‹</span>
+        <span className="pointer-events-none grid size-9 place-items-center rounded-lg bg-muted/50 text-xs text-muted-foreground/30">‹</span>
       )}
       {Array.from({ length: total }, (_, i) => i + 1).map((p) =>
         p === current ? (
@@ -38,9 +38,9 @@ export function BlogPagination({ current, total }: BlogPaginationProps) {
         )
       )}
       {current < total ? (
-        <Link href={buildHref(current + 1)} className="grid size-9 cursor-pointer place-items-center rounded-lg bg-muted text-xs font-medium text-muted-foreground">›</Link>
+        <Link href={buildHref(current + 1)} className="grid size-9 cursor-pointer place-items-center rounded-lg bg-muted text-xs font-medium text-muted-foreground transition hover:bg-muted/80">›</Link>
       ) : (
-        <span className="grid size-9 place-items-center rounded-lg text-xs text-muted-foreground/40">›</span>
+        <span className="pointer-events-none grid size-9 place-items-center rounded-lg bg-muted/50 text-xs text-muted-foreground/30">›</span>
       )}
     </div>
   );
