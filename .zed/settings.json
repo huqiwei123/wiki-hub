@@ -1,0 +1,29 @@
+{
+  "languages": {
+    "TypeScript": {
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "TSX": {
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "CSS": {
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "JSON": {
+      "format_on_save": "on",
+      "formatter": "prettier"
+    },
+    "Markdown": {
+      "format_on_save": "on",
+      "formatter": "prettier"
+    }
+  },
+  "file_scan_exclusions": [
+    "node_modules/**",
+    ".next/**",
+    "public/uploads/**"
+  ]
+}

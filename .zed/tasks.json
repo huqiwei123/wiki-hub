@@ -1,0 +1,22 @@
+[
+  {
+    "label": "Dev Server",
+    "command": "npm run dev"
+  },
+  {
+    "label": "Build",
+    "command": "npm run build"
+  },
+  {
+    "label": "Lint",
+    "command": "npm run lint"
+  },
+  {
+    "label": "DB Migrate",
+    "command": "npm run db:migrate"
+  },
+  {
+    "label": "Create Admin",
+    "command": "npm run admin:create"
+  }
+]

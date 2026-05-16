@@ -83,6 +83,7 @@ export function SiteFooter() {
               { label: "About", href: "/about" },
               { label: "RSS Feed", href: "/api/rss" },
               { label: "Bookmarks", href: "/bookmarks" },
+              { label: "Admin Dashboard", href: "/admin/dashboard" },
             ]}
           />
           <div>
