@@ -1,4 +1,4 @@
-import { publicSupabase, withTimeoutSignal } from "@/lib/supabase/public";
+import { query } from "@/lib/db/query";
 
 interface SearchResult {
   id: string;
@@ -14,18 +14,20 @@ interface SearchResult {
   rank: number;
 }
 
-export async function searchPosts(query: string, limit = 8): Promise<SearchResult[]> {
-  const timeout = withTimeoutSignal();
-  try {
-    const { data, error } = await publicSupabase
-      .rpc("search_posts", { search_query: query, limit_count: limit })
-      .abortSignal(timeout.signal);
+export async function searchPosts(queryText: string, limit = 8): Promise<SearchResult[]> {
+  const trimmed = queryText.trim();
+  if (!trimmed) return [];
 
-    if (error) return [];
-    return (data as SearchResult[]) ?? [];
-  } catch {
-    return [];
-  } finally {
-    timeout.clear();
-  }
+  return query<SearchResult>(
+    `
+    SELECT id, slug, title, excerpt, category_id, author_id, cover_image,
+           reading_time, view_count, published_at,
+           ts_rank(fts, plainto_tsquery('simple', $1)) AS rank
+    FROM posts
+    WHERE published = true AND fts @@ plainto_tsquery('simple', $1)
+    ORDER BY rank DESC, published_at DESC NULLS LAST
+    LIMIT $2
+    `,
+    [trimmed, limit],
+  );
 }

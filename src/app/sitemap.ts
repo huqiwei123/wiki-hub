@@ -1,24 +1,25 @@
 import type { MetadataRoute } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { query } from "@/lib/db/query";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = await createClient();
-
-  const { data: posts } = await supabase
-    .from("posts")
-    .select("slug, updated_at")
-    .eq("published", true)
-    .order("published_at", { ascending: false });
+  const posts = await query<{ slug: string; updated_at: string }>(
+    `
+    SELECT slug, updated_at
+    FROM posts
+    WHERE published = true
+    ORDER BY published_at DESC NULLS LAST
+    `,
+  );
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   const postEntries: MetadataRoute.Sitemap =
-    posts?.map((post) => ({
+    posts.map((post) => ({
       url: `${baseUrl}/blog/${post.slug}`,
       lastModified: new Date(post.updated_at),
       changeFrequency: "weekly",
       priority: 0.8,
-    })) ?? [];
+    }));
 
   return [
     {

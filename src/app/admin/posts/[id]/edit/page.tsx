@@ -1,7 +1,7 @@
 import { updatePost, deletePost } from "@/actions/posts";
 import { getAllCategories } from "@/queries/categories";
 import { getAllTags } from "@/queries/tags";
-import { createClient } from "@/lib/supabase/server";
+import { getPostForEdit } from "@/queries/posts";
 import { notFound } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,19 +13,13 @@ import { ImageUpload } from "@/components/admin/image-upload";
 export default async function EditPostPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
   const { id } = await params;
   const { saved } = await searchParams;
-  const supabase = await createClient();
-
-  const { data: post } = await supabase
-    .from("posts")
-    .select("*, tags:post_tags(tag_id)")
-    .eq("id", id)
-    .single();
+  const post = await getPostForEdit(id);
 
   if (!post) notFound();
 
   const categories = await getAllCategories();
   const tags = await getAllTags();
-  const selectedTagIds = post.tags?.map((t: { tag_id: string }) => t.tag_id) ?? [];
+  const selectedTagIds = post.tag_ids ?? [];
 
   const updatePostWithId = updatePost.bind(null, id);
   const deletePostWithId = deletePost.bind(null, id);

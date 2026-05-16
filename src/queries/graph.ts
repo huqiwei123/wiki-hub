@@ -1,5 +1,5 @@
-import { publicSupabase, withTimeoutSignal } from "@/lib/supabase/public";
 import { cache } from "react";
+import { query, queryOne } from "@/lib/db/query";
 
 export interface PostLinkEdge {
   source: string;
@@ -8,139 +8,88 @@ export interface PostLinkEdge {
   targetTitle: string;
 }
 
-type LinkedPost = { slug: string; title: string } | null;
-type PostLinkRow = {
-  source: LinkedPost;
-  target: LinkedPost;
-  target_slug: string;
-};
-type BacklinkRow = {
-  source: LinkedPost;
-};
-type ForwardLinkRow = {
-  target: LinkedPost;
-  target_slug: string;
-};
-type GraphPostRow = {
-  slug: string;
-  title: string;
-  categories: { name: string } | null;
-};
-type GraphLinkRow = {
-  source: { slug: string } | null;
-  target: { slug: string } | null;
-  target_slug: string;
-};
-
 export async function getPostLinks(slug: string): Promise<PostLinkEdge[]> {
-  const timeout = withTimeoutSignal();
-  try {
-    // Get post ID first
-    const { data: post } = await publicSupabase
-      .from("posts")
-      .select("id, title, slug")
-      .eq("slug", slug)
-      .eq("published", true)
-      .abortSignal(timeout.signal)
-      .maybeSingle();
+  const post = await queryOne<{ id: string }>(
+    "SELECT id FROM posts WHERE slug = $1 AND published = true",
+    [slug],
+  );
 
-    if (!post) return [];
+  if (!post) return [];
 
-    // Get links where this post is source or target
-    const { data: links, error } = await publicSupabase
-      .from("post_links")
-      .select("source_post_id, target_post_id, target_slug, source:source_post_id(slug, title), target:target_post_id(slug, title)")
-      .or(`source_post_id.eq.${post.id},target_post_id.eq.${post.id}`)
-      .abortSignal(timeout.signal);
-
-    if (error || !links) return [];
-
-    return (links as unknown as PostLinkRow[]).map((l) => ({
-      source: l.source?.slug ?? "",
-      target: l.target?.slug ?? l.target_slug,
-      sourceTitle: l.source?.title ?? "",
-      targetTitle: l.target?.title ?? l.target_slug,
-    }));
-  } catch {
-    return [];
-  } finally {
-    timeout.clear();
-  }
+  return query<PostLinkEdge>(
+    `
+    SELECT source.slug AS source,
+           COALESCE(target.slug, pl.target_slug) AS target,
+           source.title AS "sourceTitle",
+           COALESCE(target.title, pl.target_slug) AS "targetTitle"
+    FROM post_links pl
+    JOIN posts source ON source.id = pl.source_post_id
+    LEFT JOIN posts target ON target.id = pl.target_post_id
+    WHERE pl.source_post_id = $1 OR pl.target_post_id = $1
+    `,
+    [post.id],
+  );
 }
 
 export const getBacklinks = cache(async (postId: string): Promise<Array<{ slug: string; title: string }>> => {
-  const timeout = withTimeoutSignal();
-  try {
-    const { data: links, error } = await publicSupabase
-      .from("post_links")
-      .select("source:source_post_id(slug, title)")
-      .eq("target_post_id", postId)
-      .abortSignal(timeout.signal);
-
-    if (error || !links) return [];
-
-    return (links as unknown as BacklinkRow[])
-      .filter((l): l is BacklinkRow & { source: NonNullable<BacklinkRow["source"]> } => Boolean(l.source))
-      .map((l) => ({ slug: l.source.slug, title: l.source.title }));
-  } catch {
-    return [];
-  } finally {
-    timeout.clear();
-  }
+  return query<{ slug: string; title: string }>(
+    `
+    SELECT p.slug, p.title
+    FROM post_links pl
+    JOIN posts p ON p.id = pl.source_post_id
+    WHERE pl.target_post_id = $1 AND p.published = true
+    ORDER BY p.published_at DESC NULLS LAST
+    `,
+    [postId],
+  );
 });
 
 export const getForwardLinks = cache(async (postId: string): Promise<Array<{ slug: string; title: string }>> => {
-  const timeout = withTimeoutSignal();
-  try {
-    const { data: links, error } = await publicSupabase
-      .from("post_links")
-      .select("target:target_post_id(slug, title), target_slug")
-      .eq("source_post_id", postId)
-      .abortSignal(timeout.signal);
-
-    if (error || !links) return [];
-
-    return (links as unknown as ForwardLinkRow[]).map((l) => ({
-      slug: l.target?.slug ?? l.target_slug,
-      title: l.target?.title ?? l.target_slug,
-    }));
-  } catch {
-    return [];
-  } finally {
-    timeout.clear();
-  }
+  return query<{ slug: string; title: string }>(
+    `
+    SELECT COALESCE(p.slug, pl.target_slug) AS slug,
+           COALESCE(p.title, pl.target_slug) AS title
+    FROM post_links pl
+    LEFT JOIN posts p ON p.id = pl.target_post_id
+    WHERE pl.source_post_id = $1
+    ORDER BY title ASC
+    `,
+    [postId],
+  );
 });
 
 export async function getAllGraphData() {
-  const timeout = withTimeoutSignal();
-  try {
-    const [{ data: posts }, { data: links }] = await Promise.all([
-      publicSupabase
-        .from("posts")
-        .select("slug, title, categories(name)")
-        .eq("published", true)
-        .abortSignal(timeout.signal),
-      publicSupabase
-        .from("post_links")
-        .select("source:source_post_id(slug), target:target_post_id(slug), target_slug")
-        .abortSignal(timeout.signal),
-    ]);
+  const [posts, links] = await Promise.all([
+    query<{ slug: string; title: string; category: string | null }>(
+      `
+      SELECT p.slug, p.title, c.name AS category
+      FROM posts p
+      LEFT JOIN categories c ON c.id = p.category_id
+      WHERE p.published = true
+      `,
+    ),
+    query<{ source: string | null; target: string | null }>(
+      `
+      SELECT source.slug AS source,
+             COALESCE(target.slug, pl.target_slug) AS target
+      FROM post_links pl
+      LEFT JOIN posts source ON source.id = pl.source_post_id AND source.published = true
+      LEFT JOIN posts target ON target.id = pl.target_post_id AND target.published = true
+      `,
+    ),
+  ]);
 
-    const nodes = ((posts ?? []) as unknown as GraphPostRow[]).map((p) => ({
-      id: p.slug,
-      label: p.title,
-      group: p.categories?.name ?? "Uncategorized",
-    }));
-
-    const edges = ((links ?? []) as unknown as GraphLinkRow[]).map((l) => ({
-      source: l.source?.slug ?? "",
-      target: l.target?.slug ?? l.target_slug,
-    }));
-
-    return { nodes, edges };
-  } catch {
-    return { nodes: [], edges: [] };
-  } finally {
-    timeout.clear();
-  }
+  return {
+    nodes: posts.map((post) => ({
+      id: post.slug,
+      label: post.title,
+      group: post.category ?? "Uncategorized",
+    })),
+    edges: links
+      .filter((link): link is { source: string; target: string } => Boolean(link.source && link.target))
+      .map((link) => ({
+        source: link.source,
+        target: link.target,
+      })),
+  };
 }

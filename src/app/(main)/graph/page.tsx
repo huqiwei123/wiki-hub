@@ -8,13 +8,12 @@ import { PageHero, SearchBox } from "@/components/wikihub/ui";
 import { Container } from "@/components/layout/container";
 import dynamic from "next/dynamic";
 import type { ForceGraphHandle } from "@/components/knowledge/graph";
+import { getGraphPageDataAction } from "@/actions/public-data";
 
 const ForceGraph = dynamic(
   () => import("@/components/knowledge/graph").then((mod) => ({ default: mod.ForceGraph })),
   { ssr: false, loading: () => <div className="flex h-[700px] items-center justify-center rounded-lg border border-border bg-card/90 text-sm text-muted-foreground">Loading graph...</div> }
 );
-import { getAllGraphData } from "@/queries/graph";
-import { getAllCategories } from "@/queries/categories";
 
 interface GraphData {
   nodes: Array<{ id: string; label: string; group: string }>;
@@ -32,7 +31,7 @@ export default function GraphPage() {
   const graphRef = useRef<ForceGraphHandle>(null);
 
   useEffect(() => {
-    Promise.all([getAllGraphData(), getAllCategories()]).then(([graphData, cats]) => {
+    getGraphPageDataAction().then(({ graphData, categories: cats }) => {
       setData(graphData);
       setCategories(cats.map((c) => ({ name: c.name, slug: c.slug })));
       setLoading(false);

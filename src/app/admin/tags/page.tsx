@@ -4,8 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { Pencil, Trash2, Check, X, Plus } from "lucide-react";
-import { getAllTags } from "@/queries/tags";
-import { createTag, updateTag, deleteTag } from "@/actions/admin";
+import { createTag, updateTag, deleteTag, getAdminTags } from "@/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -43,7 +42,7 @@ export default function AdminTagsPage() {
   const [showNew, setShowNew] = useState(false);
 
   const load = async () => {
-    const data = await getAllTags();
+    const data = await getAdminTags();
     setTags((data as TagQueryItem[]).map((t) => ({
       id: t.id, name: t.name, slug: t.slug,
       color: t.color ?? null, description: t.description ?? null,

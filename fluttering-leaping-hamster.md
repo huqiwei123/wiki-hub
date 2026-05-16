@@ -2,7 +2,7 @@
 
 ## Context
 
-从零构建一个以技术博客为核心的个人知识库系统，集成知识管理（双向链接、知识图谱）和社交互动（评论、点赞、订阅）功能。选择 Next.js 15 + Supabase + Vercel 技术栈，实现全栈应用，支持亮/暗双主题切换。
+从零构建一个以技术博客为核心的个人知识库系统，集成知识管理（双向链接、知识图谱）和社交互动（评论、点赞、订阅）功能。选择 Next.js 15 + Local PostgreSQL + Next.js 技术栈，实现全栈应用，支持亮/暗双主题切换。
 
 ---
 
@@ -11,13 +11,13 @@
 | 层级 | 选择 | 理由 |
 |------|------|------|
 | 框架 | Next.js 15 (App Router) | RSC + Server Actions + Vercel 原生 |
-| 数据库 | Supabase (Postgres) | Auth + Storage + Realtime 一体化 |
+| 数据库 | Local PostgreSQL | Auth + Storage + Realtime 一体化 |
 | UI 组件 | shadcn/ui + Tailwind CSS | 可定制、无依赖锁定 |
 | 主题 | next-themes | 亮/暗切换，CSS 变量方案 |
 | MDX | next-mdx-remote/rsc | 服务端渲染，零客户端 JS |
 | 代码高亮 | rehype-pretty-code (Shiki) | 主题一致、行高亮支持 |
 | 图谱 | D3.js force-directed | 轻量、可定制 |
-| 搜索 | Supabase tsvector + pg_trgm | 全文 + 模糊，无额外服务 |
+| 搜索 | Local PostgreSQL tsvector + pg_trgm | 全文 + 模糊，无额外服务 |
 | 编辑器 | CodeMirror 6 | 可扩展、MDX 友好 |
 
 ---
@@ -69,7 +69,7 @@ wiki-platform/
 │   │   ├── theme/               # 主题切换
 │   │   └── layout/              # Header、Footer、Sidebar
 │   ├── lib/
-│   │   ├── supabase/
+│   │   ├── postgres/
 │   │   │   ├── client.ts        # 浏览器客户端
 │   │   │   ├── server.ts        # 服务端客户端（cookie 认证）
 │   │   │   └── admin.ts         # 管理端客户端（service role）
@@ -98,7 +98,7 @@ wiki-platform/
 │   ├── hooks/
 │   └── config/
 │       └── site.ts              # 站点配置
-├── supabase/
+├── postgres/
 │   └── migrations/              # 数据库迁移
 ├── public/
 ├── .env.local
@@ -186,7 +186,7 @@ wiki-platform/
 - **reader** - 自注册，可收藏/点赞/评论
 - **anonymous** - 可阅读公开内容、提交游客评论
 
-三个 Supabase 客户端实例：
+三个 Local PostgreSQL 客户端实例：
 - `client.ts` - 浏览器端，anon key，受 RLS 保护
 - `server.ts` - 服务端，anon key + cookie 传递，受 RLS 保护
 - `admin.ts` - 管理端，service role key，绕过 RLS
@@ -220,7 +220,7 @@ Middleware 刷新 auth session 并保护 `/admin/*` 和 `/bookmarks` 路由。
 - 前端：cmdk 命令面板，Cmd+K 快捷键，300ms 防抖
 
 ### 5. 评论系统
-- Supabase Realtime 订阅 `comments` 表，按 `post_id` 过滤
+- local PostgreSQL-backed updates 订阅 `comments` 表，按 `post_id` 过滤
 - INSERT/UPDATE 事件实时更新评论列表
 - 嵌套回复（parent_id 自引用），审核机制（is_approved）
 
@@ -249,7 +249,7 @@ Middleware 刷新 auth session 并保护 `/admin/*` 和 `/bookmarks` 路由。
 **交付物：可工作的博客**
 
 1. 项目脚手架：Next.js 15 + TypeScript + Tailwind + shadcn/ui
-2. Supabase 项目创建 + 数据库迁移（profiles, categories, tags, posts, post_tags）
+2. Local PostgreSQL 项目创建 + 数据库迁移（profiles, categories, tags, posts, post_tags）
 3. 认证系统：登录/注册页 + middleware + 三客户端实例
 4. 文章 CRUD：Server Actions + 管理后台编辑器（CodeMirror）
 5. MDX 渲染管线：next-mdx-remote + rehype-pretty-code

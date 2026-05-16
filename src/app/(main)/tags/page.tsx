@@ -5,7 +5,7 @@ import { ArrowUpRight, Hash, Tag } from "lucide-react";
 import type React from "react";
 import { PageHero, Pagination, SearchBox, SortBar } from "@/components/wikihub/ui";
 import { Container } from "@/components/layout/container";
-import { getAllTags } from "@/queries/tags";
+import { getTagsAction } from "@/actions/public-data";
 
 interface TagItem {
   name: string;
@@ -24,7 +24,7 @@ export default function TagsPage() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    getAllTags().then((data) => {
+    getTagsAction().then((data) => {
       setTags(data.map((t) => ({
         name: t.name,
         slug: t.slug,

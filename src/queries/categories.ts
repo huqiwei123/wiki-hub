@@ -1,25 +1,16 @@
-import { publicSupabase, withTimeoutSignal } from "@/lib/supabase/public";
-import type { Category } from "@/types";
 import { cache } from "react";
+import { query } from "@/lib/db/query";
+import type { Category } from "@/types";
 
 export const getAllCategories = cache(async () => {
-  const timeout = withTimeoutSignal();
-  try {
-    const { data, error } = await publicSupabase
-      .from("categories")
-      .select("*, post_count:posts(count)")
-      .order("sort_order", { ascending: true })
-      .abortSignal(timeout.signal);
-
-    if (error || !data) return [];
-
-    return (data as Array<Category & { post_count: Array<{ count: number }> }>).map((cat) => ({
-      ...cat,
-      post_count: cat.post_count?.[0]?.count ?? 0,
-    }));
-  } catch {
-    return [];
-  } finally {
-    timeout.clear();
-  }
+  return query<Category & { post_count: number }>(
+    `
+    SELECT c.id, c.name, c.slug, c.description, c.sort_order,
+           count(p.id)::int AS post_count
+    FROM categories c
+    LEFT JOIN posts p ON p.category_id = c.id AND p.published = true
+    GROUP BY c.id
+    ORDER BY c.sort_order ASC, c.name ASC
+    `,
+  );
 });

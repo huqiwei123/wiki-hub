@@ -24,6 +24,10 @@ export default async function HomePage() {
         />
         <div
           aria-hidden="true"
+          className="absolute inset-0 bg-[url('/generated/home-hero-light.webp')] bg-cover bg-center opacity-12 mix-blend-soft-light dark:bg-[url('/generated/home-hero-dark.webp')] dark:opacity-10"
+        />
+        <div
+          aria-hidden="true"
           className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.14),rgba(239,246,255,0.42))] dark:bg-[linear-gradient(to_bottom,rgba(15,23,42,0.22),rgba(15,23,42,0.55))]"
         />
         <div

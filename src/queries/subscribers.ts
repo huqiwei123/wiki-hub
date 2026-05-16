@@ -1,17 +1,15 @@
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/current-user";
+import { query } from "@/lib/db/query";
 import type { Subscription } from "@/types";
 
 export async function getAllSubscribers() {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .order("subscribed_at", { ascending: false });
+  await requireAdmin();
 
-    if (error || !data) return [];
-    return data as Subscription[];
-  } catch {
-    return [];
-  }
+  return query<Subscription>(
+    `
+    SELECT id, email, is_active, subscribed_at, unsubscribed_at
+    FROM subscriptions
+    ORDER BY subscribed_at DESC
+    `,
+  );
 }

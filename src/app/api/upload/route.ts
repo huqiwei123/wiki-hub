@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { currentUser } from "@/lib/auth/current-user";
+import { savePostImage } from "@/lib/storage/local-images";
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (user.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
@@ -10,36 +19,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "Only image files are allowed" }, { status: 400 });
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: "File size must be under 5MB" }, { status: 400 });
-    }
-
-    const ext = file.name.split(".").pop() ?? "png";
-    const filename = `${crypto.randomUUID()}.${ext}`;
-
-    const supabase = createAdminClient();
-
-    const { error } = await supabase.storage
-      .from("post-images")
-      .upload(filename, file, {
-        contentType: file.type,
-        upsert: false,
-      });
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    const { data: urlData } = supabase.storage
-      .from("post-images")
-      .getPublicUrl(filename);
-
-    return NextResponse.json({ url: urlData.publicUrl });
-  } catch (e) {
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    const url = await savePostImage(file);
+    return NextResponse.json({ url });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Upload failed";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

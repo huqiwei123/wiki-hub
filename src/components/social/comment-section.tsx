@@ -2,8 +2,7 @@
 
 import { useState, useRef } from "react";
 import { MessageCircle, UserRound, ChevronDown, ChevronUp } from "lucide-react";
-import { createComment } from "@/actions/comments";
-import { getCommentReplies } from "@/queries/comments";
+import { createComment, getCommentRepliesAction } from "@/actions/comments";
 import { LikeButton } from "./like-button";
 import { Separator } from "@/components/ui/separator";
 import type { Comment } from "@/types";
@@ -26,7 +25,7 @@ function CommentItem({ comment, postId, slug, depth = 0 }: { comment: Comment; p
   const loadReplies = async () => {
     if (!showReplies && replies.length === 0) {
       setLoadingReplies(true);
-      const data = await getCommentReplies(comment.id);
+      const data = await getCommentRepliesAction(comment.id);
       setReplies(data);
       setLoadingReplies(false);
     }
@@ -70,7 +69,7 @@ function CommentItem({ comment, postId, slug, depth = 0 }: { comment: Comment; p
                 replyFormRef.current?.reset();
                 setShowReplyForm(false);
                 setShowReplies(true);
-                const data = await getCommentReplies(comment.id);
+                const data = await getCommentRepliesAction(comment.id);
                 setReplies(data);
               }}
               className="mt-3"

@@ -9,29 +9,17 @@ import { ArrowLeft, CalendarDays, Clock3, Eye, UserRound } from "lucide-react";
 import { Backlinks } from "@/components/knowledge/backlinks";
 import { getBacklinks, getForwardLinks } from "@/queries/graph";
 import { getComments, getCommentCount } from "@/queries/comments";
-import { getLikeCount } from "@/queries/likes";
+import { getLikeCount, hasUserLiked } from "@/queries/likes";
 import { LikeButton } from "@/components/social/like-button";
 import { ShareButtons } from "@/components/social/share-buttons";
 import { CommentSection } from "@/components/social/comment-section";
-import { createClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/config/site";
+import { currentUser } from "@/lib/auth/current-user";
 
 async function checkUserLiked(postId: string): Promise<boolean> {
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
-    const { data } = await supabase
-      .from("likes")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("target_type", "post")
-      .eq("target_id", postId)
-      .maybeSingle();
-    return !!data;
-  } catch {
-    return false;
-  }
+  const user = await currentUser();
+  if (!user) return false;
+  return hasUserLiked(user.id, "post", postId);
 }
 
 async function BacklinksAsync({ postId }: { postId: string }) {

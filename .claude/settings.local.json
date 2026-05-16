@@ -31,7 +31,29 @@
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__fill",
       "mcp__plugin_chrome-devtools-mcp_chrome-devtools__type_text",
       "Bash(claude mcp *)",
-      "Bash(npx skills *)"
+      "Bash(npx skills *)",
+      "Bash(git commit *)",
+      "Bash(npx tsx *)",
+      "Bash(curl -s \"http://localhost:3000/blog/deep-dive\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s \"http://localhost:3000/blog\")",
+      "Bash(curl -s \"http://localhost:3000\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3000/blog\")",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_network_requests",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__get_network_request",
+      "mcp__zai-mcp-server__analyze_image",
+      "Bash(git check-ignore *)",
+      "Bash(git add *)",
+      "Bash(git push *)",
+      "Bash(claude --debug)",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__press_key",
+      "Bash(npx vercel *)",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__wait_for",
+      "Bash(curl -o /dev/null -s -w \"TTFB: %{time_starttransfer}s\\\\nTotal: %{time_total}s\\\\nHTTP: %{http_code}\\\\n\" http://localhost:3000/blog/deep-dive)",
+      "Bash(curl -o /dev/null -s -w 'Request __TRACKED_VAR__ - TTFB: %{time_starttransfer}s | Total: %{time_total}s\\\\n' http://localhost:3000/blog/server-components)",
+      "Bash(curl -s -N http://localhost:3000/blog/server-components)",
+      "Bash(curl -s http://localhost:3000/blog/server-components)",
+      "Bash(gh pr *)"
     ]
   }
 }

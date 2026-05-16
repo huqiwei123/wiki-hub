@@ -1,39 +1,33 @@
-import { publicSupabase, withTimeoutSignal } from "@/lib/supabase/public";
 import { cache } from "react";
+import { query, queryOne } from "@/lib/db/query";
+import type { Like } from "@/types";
 
 export const getLikeCount = cache(async (targetType: "post" | "comment", targetId: string) => {
-  const timeout = withTimeoutSignal();
-  try {
-    const { count, error } = await publicSupabase
-      .from("likes")
-      .select("*", { count: "exact", head: true })
-      .eq("target_type", targetType)
-      .eq("target_id", targetId)
-      .abortSignal(timeout.signal);
+  const row = await queryOne<{ count: string }>(
+    "SELECT count(*) FROM likes WHERE target_type = $1 AND target_id = $2",
+    [targetType, targetId],
+  );
 
-    if (error) return 0;
-    return count ?? 0;
-  } catch {
-    return 0;
-  } finally {
-    timeout.clear();
-  }
+  return Number(row?.count ?? 0);
 });
 
 export const getLikesByTarget = cache(async (targetType: "post" | "comment", targetId: string) => {
-  const timeout = withTimeoutSignal();
-  try {
-    const { data } = await publicSupabase
-      .from("likes")
-      .select("id, user_id, target_type, target_id, created_at")
-      .eq("target_type", targetType)
-      .eq("target_id", targetId)
-      .abortSignal(timeout.signal);
-
-    return data ?? [];
-  } catch {
-    return [];
-  } finally {
-    timeout.clear();
-  }
+  return query<Like>(
+    `
+    SELECT id, user_id, target_type, target_id, created_at
+    FROM likes
+    WHERE target_type = $1 AND target_id = $2
+    ORDER BY created_at DESC
+    `,
+    [targetType, targetId],
+  );
 });
+
+export async function hasUserLiked(userId: string, targetType: "post" | "comment", targetId: string) {
+  const row = await queryOne<{ id: string }>(
+    "SELECT id FROM likes WHERE user_id = $1 AND target_type = $2 AND target_id = $3",
+    [userId, targetType, targetId],
+  );
+
+  return Boolean(row);
+}

@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import readingTime from "reading-time";
+import { requireAdmin } from "@/lib/auth/current-user";
+import { queryOne, transaction } from "@/lib/db/query";
 
 function generateSlug(title: string): string {
   return title
@@ -15,51 +16,52 @@ function generateSlug(title: string): string {
 }
 
 export async function createPost(formData: FormData) {
-  const supabase = await createClient();
+  const user = await requireAdmin();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const title = formData.get("title") as string;
+  const title = String(formData.get("title") ?? "").trim();
   const slug = generateSlug(title);
-  const content = formData.get("content") as string;
-  const excerpt = formData.get("excerpt") as string;
-  const categoryId = (formData.get("category_id") as string) || null;
+  const content = String(formData.get("content") ?? "");
+  const excerpt = String(formData.get("excerpt") ?? "").trim();
+  const categoryId = String(formData.get("category_id") ?? "") || null;
   const published = formData.get("published") === "on";
-  const coverImage = (formData.get("cover_image") as string) || null;
-  const tagIds = formData.getAll("tag_ids") as string[];
+  const coverImage = String(formData.get("cover_image") ?? "") || null;
+  const tagIds = formData.getAll("tag_ids").map(String).filter(Boolean);
 
-  const { data: post, error } = await supabase
-    .from("posts")
-    .insert({
-      slug,
-      title,
-      content,
-      excerpt: excerpt || null,
-      category_id: categoryId,
-      author_id: user.id,
-      cover_image: coverImage,
-      reading_time: Math.round(readingTime(content).minutes),
-      published,
-      published_at: published ? new Date().toISOString() : null,
-    })
-    .select("id")
-    .single();
+  if (!title || !slug) throw new Error("Title is required");
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  if (tagIds.length > 0) {
-    await supabase.from("post_tags").insert(
-      tagIds.map((tagId) => ({
-        post_id: post.id,
-        tag_id: tagId,
-      })),
+  const post = await transaction(async (client) => {
+    const inserted = await client.query<{ id: string }>(
+      `
+      INSERT INTO posts (
+        slug, title, content, excerpt, category_id, author_id,
+        cover_image, reading_time, published, published_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING id
+      `,
+      [
+        slug,
+        title,
+        content,
+        excerpt || null,
+        categoryId,
+        user.id,
+        coverImage,
+        Math.round(readingTime(content).minutes),
+        published,
+        published ? new Date().toISOString() : null,
+      ],
     );
-  }
+
+    const postId = inserted.rows[0].id;
+    for (const tagId of tagIds) {
+      await client.query(
+        "INSERT INTO post_tags (post_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+        [postId, tagId],
+      );
+    }
+    return { id: postId };
+  });
 
   revalidatePath("/blog");
   revalidatePath("/");
@@ -67,47 +69,61 @@ export async function createPost(formData: FormData) {
 }
 
 export async function updatePost(postId: string, formData: FormData) {
-  const supabase = await createClient();
+  await requireAdmin();
 
-  const title = formData.get("title") as string;
-  const content = formData.get("content") as string;
-  const excerpt = formData.get("excerpt") as string;
-  const categoryId = (formData.get("category_id") as string) || null;
+  const title = String(formData.get("title") ?? "").trim();
+  const content = String(formData.get("content") ?? "");
+  const excerpt = String(formData.get("excerpt") ?? "").trim();
+  const categoryId = String(formData.get("category_id") ?? "") || null;
   const published = formData.get("published") === "on";
-  const coverImage = (formData.get("cover_image") as string) || null;
-  const tagIds = formData.getAll("tag_ids") as string[];
+  const coverImage = String(formData.get("cover_image") ?? "") || null;
+  const tagIds = formData.getAll("tag_ids").map(String).filter(Boolean);
 
-  const { data: existing } = await supabase
-    .from("posts")
-    .select("published")
-    .eq("id", postId)
-    .single();
-
-  const { error } = await supabase
-    .from("posts")
-    .update({
-      title,
-      content,
-      excerpt: excerpt || null,
-      category_id: categoryId,
-      cover_image: coverImage,
-      reading_time: Math.round(readingTime(content).minutes),
-      published,
-      published_at: published && !existing?.published ? new Date().toISOString() : undefined,
-    })
-    .eq("id", postId);
-
-  if (error) throw new Error(error.message);
-
-  await supabase.from("post_tags").delete().eq("post_id", postId);
-  if (tagIds.length > 0) {
-    await supabase.from("post_tags").insert(
-      tagIds.map((tagId) => ({
-        post_id: postId,
-        tag_id: tagId,
-      })),
+  await transaction(async (client) => {
+    const existing = await client.query<{ published: boolean; slug: string }>(
+      "SELECT published, slug FROM posts WHERE id = $1",
+      [postId],
     );
-  }
+
+    if (!existing.rows[0]) throw new Error("Post not found");
+
+    await client.query(
+      `
+      UPDATE posts
+      SET title = $1,
+          content = $2,
+          excerpt = $3,
+          category_id = $4,
+          cover_image = $5,
+          reading_time = $6,
+          published = $7,
+          published_at = CASE
+            WHEN $7 = true AND published = false THEN now()
+            WHEN $7 = false THEN NULL
+            ELSE published_at
+          END
+      WHERE id = $8
+      `,
+      [
+        title,
+        content,
+        excerpt || null,
+        categoryId,
+        coverImage,
+        Math.round(readingTime(content).minutes),
+        published,
+        postId,
+      ],
+    );
+
+    await client.query("DELETE FROM post_tags WHERE post_id = $1", [postId]);
+    for (const tagId of tagIds) {
+      await client.query(
+        "INSERT INTO post_tags (post_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+        [postId, tagId],
+      );
+    }
+  });
 
   revalidatePath("/blog");
   revalidatePath("/");
@@ -116,36 +132,34 @@ export async function updatePost(postId: string, formData: FormData) {
 }
 
 export async function deletePost(postId: string) {
-  const supabase = await createClient();
+  await requireAdmin();
 
-  const { error } = await supabase.from("posts").delete().eq("id", postId);
-
-  if (error) throw new Error(error.message);
+  await queryOne("DELETE FROM posts WHERE id = $1", [postId]);
 
   revalidatePath("/blog");
   revalidatePath("/");
 }
 
 export async function togglePublish(postId: string) {
-  const supabase = await createClient();
+  await requireAdmin();
 
-  const { data: post } = await supabase
-    .from("posts")
-    .select("published")
-    .eq("id", postId)
-    .single();
+  const post = await queryOne<{ published: boolean }>(
+    "SELECT published FROM posts WHERE id = $1",
+    [postId],
+  );
 
   if (!post) throw new Error("Post not found");
 
   const newPublished = !post.published;
-
-  await supabase
-    .from("posts")
-    .update({
-      published: newPublished,
-      published_at: newPublished ? new Date().toISOString() : null,
-    })
-    .eq("id", postId);
+  await queryOne(
+    `
+    UPDATE posts
+    SET published = $1,
+        published_at = CASE WHEN $1 = true THEN now() ELSE NULL END
+    WHERE id = $2
+    `,
+    [newPublished, postId],
+  );
 
   revalidatePath("/blog");
   revalidatePath("/");

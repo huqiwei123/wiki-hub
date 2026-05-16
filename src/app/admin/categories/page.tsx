@@ -4,8 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { Pencil, Trash2, Check, X, Plus } from "lucide-react";
-import { getAllCategories } from "@/queries/categories";
-import { createCategory, updateCategory, deleteCategory } from "@/actions/admin";
+import { createCategory, updateCategory, deleteCategory, getAdminCategories } from "@/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -35,7 +34,7 @@ export default function AdminCategoriesPage() {
   const [showNew, setShowNew] = useState(false);
 
   const load = async () => {
-    const data = await getAllCategories();
+    const data = await getAdminCategories();
     setCategories((data as CategoryQueryItem[]).map((c) => ({
       id: c.id, name: c.name, slug: c.slug,
       description: c.description ?? null, post_count: c.post_count ?? 0,

@@ -1,50 +1,57 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { currentUser } from "@/lib/auth/current-user";
+import { queryOne } from "@/lib/db/query";
+import { getCommentReplies } from "@/queries/comments";
 
 export async function createComment(formData: FormData) {
-  const supabase = await createClient();
+  const postId = String(formData.get("post_id") ?? "");
+  const content = String(formData.get("content") ?? "").trim();
+  const parentId = String(formData.get("parent_id") ?? "") || null;
+  const guestName = String(formData.get("guest_name") ?? "").trim();
+  const guestEmail = String(formData.get("guest_email") ?? "").trim() || null;
+  const slug = String(formData.get("slug") ?? "");
 
-  const postId = formData.get("post_id") as string;
-  const content = formData.get("content") as string;
-  const parentId = formData.get("parent_id") as string | null;
-  const guestName = formData.get("guest_name") as string | null;
-  const guestEmail = formData.get("guest_email") as string | null;
-  const slug = formData.get("slug") as string;
+  if (!content || !postId) return;
 
-  if (!content?.trim() || !postId) return;
+  const user = await currentUser();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  await queryOne(
+    `
+    INSERT INTO comments (post_id, content, parent_id, author_id, guest_name, guest_email)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    `,
+    [
+      postId,
+      content,
+      parentId,
+      user?.id ?? null,
+      user ? null : guestName || "Anonymous",
+      user ? null : guestEmail,
+    ],
+  );
 
-  const { error } = await supabase.from("comments").insert({
-    post_id: postId,
-    content: content.trim(),
-    parent_id: parentId || null,
-    author_id: user?.id ?? null,
-    guest_name: user ? null : (guestName?.trim() || "Anonymous"),
-    guest_email: user ? null : (guestEmail?.trim() || null),
-  });
-
-  if (!error && slug) {
+  if (slug) {
     revalidatePath(`/blog/${slug}`);
   }
 }
 
 export async function deleteComment(commentId: string, slug?: string) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) redirect("/login");
 
-  const { error } = await supabase.from("comments").delete().eq("id", commentId).eq("author_id", user.id);
+  await queryOne(
+    "DELETE FROM comments WHERE id = $1 AND author_id = $2",
+    [commentId, user.id],
+  );
 
-  if (!error && slug) {
+  if (slug) {
     revalidatePath(`/blog/${slug}`);
   }
+}
+
+export async function getCommentRepliesAction(parentId: string) {
+  return getCommentReplies(parentId);
 }

@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/current-user";
+import { queryOne } from "@/lib/db/query";
+import { getAllCategories } from "@/queries/categories";
+import { getAllTags } from "@/queries/tags";
 
 function generateSlug(name: string): string {
   return name
@@ -12,73 +15,92 @@ function generateSlug(name: string): string {
     .trim();
 }
 
-// --- Categories ---
-
 export async function createCategory(formData: FormData) {
-  const supabase = await createClient();
-  const name = formData.get("name") as string;
-  const description = (formData.get("description") as string) || null;
+  await requireAdmin();
 
-  await supabase.from("categories").insert({
-    name,
-    slug: generateSlug(name),
-    description,
-  });
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim() || null;
+  if (!name) return;
+
+  await queryOne(
+    "INSERT INTO categories (name, slug, description) VALUES ($1, $2, $3)",
+    [name, generateSlug(name), description],
+  );
 
   revalidatePath("/admin/categories");
+  revalidatePath("/categories");
+}
+
+export async function getAdminCategories() {
+  await requireAdmin();
+  return getAllCategories();
 }
 
 export async function updateCategory(id: string, formData: FormData) {
-  const supabase = await createClient();
-  const name = formData.get("name") as string;
-  const description = (formData.get("description") as string) || null;
+  await requireAdmin();
 
-  await supabase.from("categories")
-    .update({ name, slug: generateSlug(name), description })
-    .eq("id", id);
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim() || null;
+  if (!name) return;
+
+  await queryOne(
+    "UPDATE categories SET name = $1, slug = $2, description = $3 WHERE id = $4",
+    [name, generateSlug(name), description, id],
+  );
 
   revalidatePath("/admin/categories");
+  revalidatePath("/categories");
 }
 
 export async function deleteCategory(id: string) {
-  const supabase = await createClient();
-  await supabase.from("categories").delete().eq("id", id);
+  await requireAdmin();
+  await queryOne("DELETE FROM categories WHERE id = $1", [id]);
   revalidatePath("/admin/categories");
+  revalidatePath("/categories");
 }
 
-// --- Tags ---
-
 export async function createTag(formData: FormData) {
-  const supabase = await createClient();
-  const name = formData.get("name") as string;
-  const description = (formData.get("description") as string) || null;
-  const color = (formData.get("color") as string) || null;
+  await requireAdmin();
 
-  await supabase.from("tags").insert({
-    name,
-    slug: generateSlug(name),
-    description,
-    color,
-  });
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim() || null;
+  const color = String(formData.get("color") ?? "").trim() || null;
+  if (!name) return;
+
+  await queryOne(
+    "INSERT INTO tags (name, slug, description, color) VALUES ($1, $2, $3, $4)",
+    [name, generateSlug(name), description, color],
+  );
 
   revalidatePath("/admin/tags");
+  revalidatePath("/tags");
+}
+
+export async function getAdminTags() {
+  await requireAdmin();
+  return getAllTags();
 }
 
 export async function updateTag(id: string, formData: FormData) {
-  const supabase = await createClient();
-  const name = formData.get("name") as string;
-  const description = (formData.get("description") as string) || null;
-  const color = (formData.get("color") as string) || null;
+  await requireAdmin();
 
-  await supabase.from("tags")
-    .update({ name, slug: generateSlug(name), description, color })
-    .eq("id", id);
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim() || null;
+  const color = String(formData.get("color") ?? "").trim() || null;
+  if (!name) return;
+
+  await queryOne(
+    "UPDATE tags SET name = $1, slug = $2, description = $3, color = $4 WHERE id = $5",
+    [name, generateSlug(name), description, color, id],
+  );
 
   revalidatePath("/admin/tags");
+  revalidatePath("/tags");
 }
 
 export async function deleteTag(id: string) {
-  const supabase = await createClient();
-  await supabase.from("tags").delete().eq("id", id);
+  await requireAdmin();
+  await queryOne("DELETE FROM tags WHERE id = $1", [id]);
   revalidatePath("/admin/tags");
+  revalidatePath("/tags");
 }

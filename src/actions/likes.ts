@@ -1,33 +1,26 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { requireUser } from "@/lib/auth/current-user";
+import { queryOne } from "@/lib/db/query";
 
 export async function toggleLike(targetType: "post" | "comment", targetId: string, slug?: string) {
-  const supabase = await createClient();
+  const user = await requireUser();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const deleted = await queryOne<{ id: string }>(
+    "DELETE FROM likes WHERE user_id = $1 AND target_type = $2 AND target_id = $3 RETURNING id",
+    [user.id, targetType, targetId],
+  );
 
-  const { data: existing } = await supabase
-    .from("likes")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("target_type", targetType)
-    .eq("target_id", targetId)
-    .maybeSingle();
-
-  if (existing) {
-    await supabase.from("likes").delete().eq("id", existing.id);
-  } else {
-    await supabase.from("likes").insert({
-      user_id: user.id,
-      target_type: targetType,
-      target_id: targetId,
-    });
+  if (!deleted) {
+    await queryOne(
+      `
+      INSERT INTO likes (user_id, target_type, target_id)
+      VALUES ($1, $2, $3)
+      ON CONFLICT DO NOTHING
+      `,
+      [user.id, targetType, targetId],
+    );
   }
 
   if (slug) {

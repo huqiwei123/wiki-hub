@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { currentUser } from "@/lib/auth/current-user";
+import { query, queryOne } from "@/lib/db/query";
 
 export interface BookmarkedPost {
   id: string;
@@ -11,63 +12,32 @@ export interface BookmarkedPost {
   category: string | null;
 }
 
-type BookmarkRow = {
-  posts: {
-    id: string;
-    slug: string;
-    title: string;
-    excerpt: string | null;
-    cover_image: string | null;
-    reading_time: number;
-    published_at: string | null;
-    categories: { name: string } | null;
-  } | null;
-};
-
 export async function getBookmarks(): Promise<BookmarkedPost[]> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return [];
 
-  const { data, error } = await supabase
-    .from("bookmarks")
-    .select("posts(id, slug, title, excerpt, cover_image, reading_time, published_at, categories(name))")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  if (error || !data) return [];
-
-  return (data as unknown as BookmarkRow[])
-    .filter((b): b is BookmarkRow & { posts: NonNullable<BookmarkRow["posts"]> } => Boolean(b.posts))
-    .map((b) => ({
-      id: b.posts.id,
-      slug: b.posts.slug,
-      title: b.posts.title,
-      excerpt: b.posts.excerpt,
-      cover_image: b.posts.cover_image,
-      reading_time: b.posts.reading_time,
-      published_at: b.posts.published_at,
-      category: b.posts.categories?.name ?? null,
-    }));
+  return query<BookmarkedPost>(
+    `
+    SELECT p.id, p.slug, p.title, p.excerpt, p.cover_image, p.reading_time,
+           p.published_at, c.name AS category
+    FROM bookmarks b
+    JOIN posts p ON p.id = b.post_id
+    LEFT JOIN categories c ON c.id = p.category_id
+    WHERE b.user_id = $1 AND p.published = true
+    ORDER BY b.created_at DESC
+    `,
+    [user.id],
+  );
 }
 
 export async function isBookmarked(postId: string): Promise<boolean> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await currentUser();
   if (!user) return false;
 
-  const { data } = await supabase
-    .from("bookmarks")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("post_id", postId)
-    .maybeSingle();
+  const row = await queryOne<{ id: string }>(
+    "SELECT id FROM bookmarks WHERE user_id = $1 AND post_id = $2",
+    [user.id, postId],
+  );
 
-  return !!data;
+  return Boolean(row);
 }

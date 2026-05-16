@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { publicSupabase } from "@/lib/supabase/public";
 import { rateLimit } from "@/lib/rate-limit";
+import { queryOne } from "@/lib/db/query";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,22 +28,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid email address" }, { status: 400, headers: corsHeaders });
     }
 
-    const { error } = await publicSupabase.from("subscriptions").upsert(
-      {
-        email: email.trim().toLowerCase(),
-        is_active: true,
-        subscribed_at: new Date().toISOString(),
-        unsubscribed_at: null,
-      },
-      { onConflict: "email" }
+    await queryOne(
+      `
+      INSERT INTO subscriptions (email, is_active, subscribed_at, unsubscribed_at)
+      VALUES ($1, true, now(), null)
+      ON CONFLICT (email) DO UPDATE
+      SET is_active = true,
+          subscribed_at = now(),
+          unsubscribed_at = null
+      `,
+      [email.trim().toLowerCase()],
     );
-
-    if (error) {
-      if (error.code === "23505") {
-        return NextResponse.json({ success: true, message: "Already subscribed" }, { headers: corsHeaders });
-      }
-      return NextResponse.json({ success: false, message: "Subscription failed" }, { status: 500, headers: corsHeaders });
-    }
 
     return NextResponse.json({ success: true, message: "Subscribed!" }, { headers: corsHeaders });
   } catch {

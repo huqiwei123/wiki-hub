@@ -13,11 +13,11 @@ const features = [
 const tech = [
   ["Next.js", "#1e293b"],
   ["TypeScript", "#3178c6"],
-  ["Supabase", "#3ecf8e"],
+  ["Local PostgreSQL", "#165dff"],
   ["Tailwind CSS", "#06b6d4"],
   ["MDX", "#f97316"],
   ["Shadcn/ui", "#6366f1"],
-  ["PostgreSQL", "#165dff"],
+  ["Node.js Backend", "#16a34a"],
   ["Vercel", "#1e293b"],
 ];
 
